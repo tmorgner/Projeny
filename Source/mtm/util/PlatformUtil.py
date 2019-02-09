@@ -1,12 +1,18 @@
 from mtm.util.Assert import *
 
 from mtm.util.Platforms import Platforms
+from prj.main import ProjectTarget
 
-def toPlatformFolderName(platform):
+
+def toPlatformTargetFolderName(projectTarget: ProjectTarget):
     # We can just directly use the full platform name for folder names
-    return platform
+    if (projectTarget.tag is None) or (projectTarget.tag == ""):
+        return projectTarget.target
+    else:
+        return projectTarget.target + "-" + projectTarget.tag
 
-def fromPlatformFolderName(platformDirName):
+
+def fromPlatformFolderName(platformDirName: str):
     platformDirName = platformDirName.lower()
 
     for curPlatform in Platforms.All:
@@ -15,7 +21,8 @@ def fromPlatformFolderName(platformDirName):
 
     assertThat(False)
 
-def fromPlatformArgName(platformArgStr):
+
+def fromPlatformArgName(platformArgStr: str):
 
     if platformArgStr == 'win' or platformArgStr == 'w':
         return Platforms.Windows

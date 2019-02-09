@@ -1,12 +1,14 @@
 import xml.etree.ElementTree as ET
 import os
+from typing import List
+
 from mtm.util.Assert import *
 
 CsProjXmlNs = 'http://schemas.microsoft.com/developer/msbuild/2003'
 NsPrefix = '{' + CsProjXmlNs + '}'
 
 class CsProjAnalyzer:
-    def __init__(self, path):
+    def __init__(self, path: str):
         assertThat(os.path.isfile(path), "Expected to find file at '{0}'", path)
 
         self._path = path
@@ -16,10 +18,10 @@ class CsProjAnalyzer:
     def root(self):
         return self._root
 
-    def getAssemblyName(self):
+    def getAssemblyName(self) -> str:
         return self._root.findall('./{0}PropertyGroup/{0}AssemblyName'.format(NsPrefix))[0].text
 
-    def getProjectReferences(self):
+    def getProjectReferences(self) -> List[str]:
         result = []
         for projRef in self._root.findall('./{0}ItemGroup/{0}ProjectReference/{0}Name'.format(NsPrefix)):
             result.append(projRef.text)

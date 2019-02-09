@@ -1,19 +1,28 @@
 
 import xml.etree.ElementTree as ET
+from typing import ValuesView, Dict, List
 from xml.dom import minidom
 
 import uuid
 import re
 import os
 
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectMany
-import mtm.ioc.IocAssertions as Assertions
+from mtm.log.Logger import Logger
 from mtm.util.Assert import *
-from prj.main.ProjenyConstants import ProjectConfigFileName, PackageConfigFileName, ProjectUserConfigFileName
+from mtm.util.SystemHelper import SystemHelper
+from mtm.util.UnityHelper import UnityHelper
+from mtm.util.VarManager import VarManager
+from prj.main.PackageData import PackageData
+from prj.main.CsProjInfo import CsProjInfo
+from prj.main.PackageManager import PackageManager
+from prj.main.ProjectSchemaLoader import ProjectSchemaLoader
+from prj.main.ProjectTarget import ProjectTarget
+from prj.main.ProjenyConstants import PackageConfigFileName
 
 from prj.main.CsProjAnalyzer import NsPrefix
+from prj.main.RefInfo import RefInfo
+from prj.main.UnityGeneratedProjInfo import UnityGeneratedProjInfo
 
 CsProjTypeGuid = 'FAE04EC0-301F-11D3-BF4B-00C04F79EFBC'
 SolutionFolderTypeGuid = '2150E333-8FDC-42A3-9474-1A3956D46DE8'
@@ -27,27 +36,27 @@ AssetsProjectName = 'AssetsFolder'
 AssetsEditorProjectName = 'AssetsFolder-Editor'
 PluginsEditorProjectName = 'PluginsFolder-Editor'
 
+
 class VisualStudioSolutionGenerator:
     """
     Handler for creating custom visual studio solutions based on ProjenyProject.yaml files
     """
-    _log = Inject('Logger')
-    _packageManager = Inject('PackageManager')
-    _schemaLoader = Inject('ProjectSchemaLoader')
-    _unityHelper = Inject('UnityHelper')
+    _log: Logger = Inject('Logger')
+    _packageManager: PackageManager = Inject('PackageManager')
+    _schemaLoader: ProjectSchemaLoader = Inject('ProjectSchemaLoader')
+    _unityHelper: UnityHelper = Inject('UnityHelper')
     _config = Inject('Config')
-    _varMgr = Inject('VarManager')
-    _sys = Inject('SystemHelper')
+    _varMgr: VarManager = Inject('VarManager')
+    _sys: SystemHelper = Inject('SystemHelper')
 
-    def updateVisualStudioSolution(self, projectName, platform):
+    def updateVisualStudioSolution(self, projectName: str, target: ProjectTarget):
         with self._log.heading('Updating Visual Studio solution for project "{0}"'.format(projectName)):
-            self._packageManager.setPathsForProjectPlatform(projectName, platform)
-            self._packageManager.checkProjectInitialized(projectName, platform)
+            self._packageManager.setPathsForProjectPlatform(projectName, target)
+            self._packageManager.checkProjectInitialized(projectName, target)
 
-            schema = self._schemaLoader.loadSchema(projectName, platform)
+            schema = self._schemaLoader.loadSchema(projectName, target)
 
-            self._updateVisualStudioSolutionInternal(
-                schema.packages.values(), schema.customFolderMap)
+            self._updateVisualStudioSolutionInternal(schema.packages.values(), schema.customFolderMap)
 
     def _prettify(self, doc):
         return minidom.parseString(ET.tostring(doc)).toprettyxml(indent="    ")
@@ -81,7 +90,7 @@ class VisualStudioSolutionGenerator:
 
         return items
 
-    def _chooseMostRecentFile(self, path1, path2, path3):
+    def _chooseMostRecentFile(self, path1: str, path2: str, path3: str):
         path1 = self._varMgr.expandPath(path1)
         path2 = self._varMgr.expandPath(path2)
         path3 = self._varMgr.expandPath(path3)
@@ -107,7 +116,7 @@ class VisualStudioSolutionGenerator:
 
         return None
 
-    def _parseGeneratedUnityProject(self):
+    def _parseGeneratedUnityProject(self) -> UnityGeneratedProjInfo:
 
         # Annoyingly, unity does generate the solution using different paths
         # depending on settings
@@ -132,7 +141,7 @@ class VisualStudioSolutionGenerator:
 
         return UnityGeneratedProjInfo(defines, references, referencesEditor)
 
-    def _updateVisualStudioSolutionInternal(self, allPackages, customFolderMap):
+    def _updateVisualStudioSolutionInternal(self, allPackages: ValuesView[PackageData], customFolderMap: Dict[str, str]):
 
         # Necessary to avoid having ns0: prefixes everywhere on output
         ET.register_namespace('', 'http://schemas.microsoft.com/developer/msbuild/2003')
@@ -152,13 +161,13 @@ class VisualStudioSolutionGenerator:
 
         self._createSolution(projectMap.values(), customFolderMap)
 
-    def _createProjectMap(self, allPackages):
+    def _createProjectMap(self, allPackages: ValuesView[PackageData]) -> Dict[str, CsProjInfo]:
         projectMap = {}
         self._addStandardProjects(projectMap)
         self._addCustomProjects(allPackages, projectMap)
         return projectMap
 
-    def _addStandardProjects(self, projectMap):
+    def _addStandardProjects(self, projectMap: Dict[str, CsProjInfo]):
         projectMap[PluginsProjectName] = self._createStandardCsProjInfo(
             PluginsProjectName, '[PluginsDir]')
 
@@ -171,8 +180,7 @@ class VisualStudioSolutionGenerator:
         projectMap[PluginsEditorProjectName] = self._createStandardCsProjInfo(
             PluginsEditorProjectName, '[PluginsDir]')
 
-    def _addFilesForAllProjects(
-        self, projectMap, unifyProjInfo):
+    def _addFilesForAllProjects(self, projectMap: Dict[str, CsProjInfo], unifyProjInfo: UnityGeneratedProjInfo):
 
         excludeDirs = []
 
@@ -195,8 +203,7 @@ class VisualStudioSolutionGenerator:
         self._initFilesForStandardCsProjForDirectory(
             projectMap[AssetsEditorProjectName], excludeDirs, unifyProjInfo, True)
 
-    def _writeCsProjFiles(
-        self, projectMap, unifyProjInfo):
+    def _writeCsProjFiles(self, projectMap: Dict[str, CsProjInfo], unifyProjInfo):
 
         for projInfo in projectMap.values():
             if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
@@ -222,7 +229,7 @@ class VisualStudioSolutionGenerator:
             projectMap[AssetsEditorProjectName], projectMap, unifyProjInfo, True)
 
     def _initDependenciesForAllProjects(
-        self, allPackages, projectMap, unifyProjInfo):
+        self, allPackages: ValuesView[PackageData], projectMap: Dict[str, CsProjInfo], unifyProjInfo):
 
         for projInfo in projectMap.values():
             if projInfo.projectType != ProjectType.Custom and projInfo.projectType != ProjectType.CustomEditor:
@@ -256,14 +263,13 @@ class VisualStudioSolutionGenerator:
         scriptsEditorProj = projectMap[AssetsEditorProjectName]
         scriptsEditorProj.dependencies = scriptsProj.dependencies + [scriptsProj, pluginsEditorProj]
 
-    def _addCustomProjects(
-        self, allPackages, allCustomProjects):
+    def _addCustomProjects(self, allPackages: ValuesView[PackageData], allCustomProjects: Dict[str, CsProjInfo]):
 
         for packageInfo in allPackages:
             if not packageInfo.createCustomVsProject:
                 continue
 
-            if packageInfo.assemblyProjectInfo == None:
+            if packageInfo.assemblyProjectInfo is None:
                 customProject = self._createGeneratedCsProjInfo(packageInfo, False)
                 allCustomProjects[customProject.name] = customProject
 
@@ -290,7 +296,7 @@ class VisualStudioSolutionGenerator:
 
         return None
 
-    def _createGeneratedCsProjInfo(self, packageInfo, isEditor):
+    def _createGeneratedCsProjInfo(self, packageInfo: PackageData, isEditor: bool):
 
         projId = self._createProjectGuid()
         outputDir = self._varMgr.expandPath(packageInfo.outputDirVar)
@@ -312,7 +318,7 @@ class VisualStudioSolutionGenerator:
         return CsProjInfo(
             projId, outputPath, csProjectName, files, isIgnored, None, ProjectType.CustomEditor if isEditor else ProjectType.Custom, packageInfo)
 
-    def _getProjectDependencies(self, projectMap, projInfo):
+    def _getProjectDependencies(self, projectMap: Dict[str, CsProjInfo], projInfo: CsProjInfo):
 
         packageInfo = projInfo.packageInfo
         assertIsNotNone(packageInfo)
@@ -354,7 +360,7 @@ class VisualStudioSolutionGenerator:
 
         return projDependencies
 
-    def _createSolution(self, projects, customFolderMap):
+    def _createSolution(self, projects: ValuesView[CsProjInfo], customFolderMap: Dict[str, str]):
 
         with open(self._varMgr.expandPath('[CsSolutionTemplate]'), 'r', encoding='utf-8', errors='ignore') as inputFile:
             solutionStr = inputFile.read()
@@ -449,7 +455,7 @@ class VisualStudioSolutionGenerator:
 
         self._log.debug('Saved new solution file at "{0}"'.format(outputPath))
 
-    def _createStandardCsProjInfo(self, projectName, outputDir):
+    def _createStandardCsProjInfo(self, projectName: str, outputDir: str) -> CsProjInfo:
 
         outputDir = self._varMgr.expandPath(outputDir)
         outputPath = os.path.join(outputDir, projectName + ".csproj")
@@ -459,8 +465,8 @@ class VisualStudioSolutionGenerator:
         return CsProjInfo(
             projId, outputPath, projectName, [], False, None, ProjectType.Standard, None)
 
-    def _initFilesForStandardCsProjForDirectory(
-        self, projInfo, excludeDirs, unityProjInfo, isEditor):
+    def _initFilesForStandardCsProjForDirectory(self, projInfo: CsProjInfo, excludeDirs: List[str],
+                                                unityProjInfo: UnityGeneratedProjInfo, isEditor: bool):
 
         outputDir = os.path.dirname(projInfo.absPath)
 
@@ -471,8 +477,8 @@ class VisualStudioSolutionGenerator:
         if len([x for x in projInfo.files if not x.endswith('.yaml')]) == 0:
             projInfo.isIgnored = True
 
-    def _writeStandardCsProjForDirectory(
-        self, projInfo, projectMap, unityProjInfo, isEditor):
+    def _writeStandardCsProjForDirectory(self, projInfo: CsProjInfo, projectMap: Dict[str, CsProjInfo],
+                                         unityProjInfo: UnityGeneratedProjInfo, isEditor: bool):
 
         if projInfo.isIgnored:
             return
@@ -488,10 +494,11 @@ class VisualStudioSolutionGenerator:
     def _createProjectGuid(self):
         return str(uuid.uuid4()).upper()
 
-    def _shouldReferenceBeCopyLocal(self, refName):
+    def _shouldReferenceBeCopyLocal(self, refName: str):
         return refName != 'System' and refName != 'System.Core'
 
-    def _writeCsProject(self, projInfo, projectMap, files, refItems, defines):
+    def _writeCsProject(self, projInfo: CsProjInfo, projectMap: Dict[str, CsProjInfo],
+                        files: List[str], refItems: List[RefInfo], defines: List[str]):
 
         outputDir = os.path.dirname(projInfo.absPath)
 
@@ -627,34 +634,10 @@ class VisualStudioSolutionGenerator:
                     if not isForEditor or isInsideEditorFolder or itemName == PackageConfigFileName:
                         files.append(fullPath)
 
-class RefInfo:
-    def __init__(self, name, hintPath):
-        self.name = name
-        self.hintPath = hintPath
-
-class UnityGeneratedProjInfo:
-    def __init__(self, defines, references, referencesEditor):
-        self.defines = defines
-        self.references = references
-        self.referencesEditor = referencesEditor
 
 class ProjectType:
     Prebuilt = 1
     Custom = 2
     CustomEditor = 3
     Standard = 4
-
-class CsProjInfo:
-    def __init__(self, id, absPath, name, files, isIgnored, configType, projectType, packageInfo):
-        assertThat(name)
-
-        self.id = id
-        self.absPath = absPath
-        self.name = name
-        self.dependencies = []
-        self.files = files
-        self.isIgnored = isIgnored
-        self.configType = configType
-        self.projectType = projectType
-        self.packageInfo = packageInfo
 

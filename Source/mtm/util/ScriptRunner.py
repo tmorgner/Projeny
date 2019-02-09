@@ -1,15 +1,18 @@
 
 from datetime import datetime
 import traceback
+from typing import Callable
+
 from mtm.ioc.Inject import Inject
 import mtm.util.Util as Util
+from mtm.log import Logger
 from mtm.util.SystemHelper import ProcessErrorCodeException, ProcessTimeoutException
 import mtm.util.MiscUtil as MiscUtil
 
 class ScriptRunner:
-    _log = Inject('Logger')
+    _log: Logger = Inject('Logger')
 
-    def runWrapper(self, runner):
+    def runWrapper(self, runner: Callable[[], None]) -> bool:
         startTime = datetime.now()
 
         succeeded = False

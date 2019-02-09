@@ -115,7 +115,7 @@ class Config:
         assertThat(result is not None, "Could not find match for YAML element {0}", self._propNameToString(args))
         return result
 
-    def tryGetList(self, fallback, *args):
+    def tryGetList(self, fallback: [], *args) -> []:
         matches = self.getAll(*args)
 
         if len(matches) == 0:

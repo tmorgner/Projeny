@@ -3,9 +3,10 @@ import sys
 import os
 import fnmatch
 import argparse
+from argparse import Namespace
+from typing import Generator, List, Union
 
 import mtm.util.MiscUtil as MiscUtil
-import mtm.util.PlatformUtil as PlatformUtil
 
 from mtm.config.YamlConfigLoader import loadYamlFilesThatExist
 from mtm.config.Config import Config
@@ -48,11 +49,13 @@ from mtm.ioc.Inject import Inject
 
 from mtm.util.UnityHelper import UnityHelper
 
-def addArguments(parser):
+
+def addArguments(parser: argparse.ArgumentParser):
 
     # Core
     parser.add_argument('-in', '--init', action='store_true', help='Initializes the directory links for all projects')
     parser.add_argument('-p', '--project', metavar='PROJECT_NAME', type=str, help="The project to apply changes to.  If unspecified, this will be set to the value for DefaultProject in {0}".format(ConfigFileName))
+    parser.add_argument('-t', '--tag', metavar='PROJECT_TAG', type=str, help="The project tag to apply changes to.  If unspecified, this will be empty")
     parser.add_argument('-pl', '--platform', type=str, default='win', choices=['w', 'win', 'g', 'webgl', 'a', 'and', 'o', 'osx', 'i', 'ios', 'l', 'lin', 'u', 'uwp', 'lumin'], help='The platform to use.  If unspecified, windows is assumed.')
 
     # Script settinsg
@@ -99,7 +102,8 @@ def addArguments(parser):
     parser.add_argument('-ou', '--openUnity', action='store_true', help='Opens up Unity for the given project')
     parser.add_argument('-d', '--openDocumentation', action='store_true', help='Opens the documentation page in a web browser')
 
-def _getProjenyDir():
+
+def _getProjenyDir() -> str:
 
     if not MiscUtil.isRunningAsExe():
         scriptDir = os.path.dirname(os.path.realpath(__file__))
@@ -107,8 +111,10 @@ def _getProjenyDir():
 
     return os.path.join(MiscUtil.getExecDirectory(), '../..')
 
-def _getExtraUserConfigPaths():
+
+def _getExtraUserConfigPaths() -> List[str]:
     return [os.path.join(os.path.expanduser('~'), ConfigFileName)]
+
 
 def installBindings(mainConfigPath):
 
@@ -124,9 +130,10 @@ def installBindings(mainConfigPath):
 
     Container.bind('Config').toSingle(Config, loadYamlFilesThatExist(*configPaths))
 
-    initialVars = { 'ProjenyDir': projenyDir, }
-
-    initialVars['ConfigDir'] = os.path.dirname(mainConfigPath)
+    initialVars = {
+                    'ProjenyDir': projenyDir,
+                    'ConfigDir': os.path.dirname(mainConfigPath)
+    }
 
     if not MiscUtil.isRunningAsExe():
         initialVars['PythonPluginDir'] = _getPluginDirPath()
@@ -153,16 +160,19 @@ def installBindings(mainConfigPath):
 
     Container.bind('ReleaseSourceManager').toSingle(ReleaseSourceManager)
 
-def _findFilesByPattern(directory, pattern):
+
+def _findFilesByPattern(directory, pattern) -> Generator[str, None, None]:
     for root, dirs, files in os.walk(directory):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
                 yield filename
 
-def _getPluginDirPath():
+
+def _getPluginDirPath() -> str:
     scriptDir = os.path.dirname(os.path.realpath(__file__))
     return os.path.join(scriptDir, '../plugins')
+
 
 def installPlugins():
     if MiscUtil.isRunningAsExe():
@@ -179,7 +189,8 @@ def installPlugins():
         basePath = basePath.replace('\\', '.')
         importlib.import_module('prj.plugins.' + basePath)
 
-def _getParentDirsAndSelf(dirPath):
+
+def _getParentDirsAndSelf(dirPath) -> Generator[str, None, None]:
     yield dirPath
 
     lastParentDir = None
@@ -191,7 +202,8 @@ def _getParentDirsAndSelf(dirPath):
         lastParentDir = parentDir
         parentDir = os.path.dirname(parentDir)
 
-def findMainConfigPath():
+
+def findMainConfigPath() -> Union[None,str]:
     for dirPath in _getParentDirsAndSelf(os.getcwd()):
         configPath = os.path.join(dirPath, ConfigFileName)
 
@@ -200,6 +212,7 @@ def findMainConfigPath():
 
     assertThat(False, "Could not find config file '{0}'", ConfigFileName)
     return None
+
 
 def _createConfig():
     print('Initializing new projeny config')
@@ -250,6 +263,7 @@ PackageFolders:
     - '[ProjectRoot]/Packages'
 """)
 
+
 def _main():
     # Here we split out some functionality into various methods
     # so that other python code can make use of them
@@ -264,7 +278,7 @@ def _main():
         parser.print_help()
         sys.exit(2)
 
-    args = parser.parse_args(sys.argv[1:])
+    args: Namespace = parser.parse_args(sys.argv[1:])
 
     Container.bind('LogStream').toSingle(LogStreamFile)
     Container.bind('LogStream').toSingle(LogStreamConsole, args.verbose, args.veryVerbose)
@@ -282,6 +296,7 @@ def _main():
         installPlugins()
 
         Container.resolve('PrjRunner').run(args)
+
 
 if __name__ == '__main__':
 

@@ -16,6 +16,7 @@ from mtm.util.Platforms import Platforms
 import mtm.util.PlatformUtil as PlatformUtil
 from mtm.util.Assert import *
 
+
 class Runner:
     _log = Inject('Logger')
     _packageMgr = Inject('PackageManager')

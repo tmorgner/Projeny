@@ -1,3 +1,4 @@
+from typing import Any
 
 import prj.main.Prj as Prj
 
@@ -15,6 +16,7 @@ from mtm.util.Platforms import Platforms
 import mtm.util.PlatformUtil as PlatformUtil
 from mtm.util.Assert import *
 
+
 class Runner:
     _scriptRunner = Inject('ScriptRunner')
     _log = Inject('Logger')
@@ -22,6 +24,7 @@ class Runner:
     _varMgr = Inject('VarManager')
     _vsSolutionHelper = Inject('VisualStudioHelper')
     _prjVsSolutionHelper = Inject('ProjenyVisualStudioHelper')
+    _args: Any
 
     def run(self, args):
         self._args = args
@@ -71,9 +74,11 @@ class Runner:
 
         return projectName, platform
 
+
 def addArguments(parser):
     parser.add_argument("filePath", help="")
     parser.add_argument("lineNo", nargs='?', help="")
+
 
 def findConfigPath(filePath):
     lastParentDir = None
@@ -90,11 +95,13 @@ def findConfigPath(filePath):
 
     assertThat(False, "Could not find Prj config path starting at path {0}", filePath)
 
+
 def installBindings(args):
 
     Container.bind('LogStream').toSingle(LogStreamConsole, True, False)
 
     Prj.installBindings(findConfigPath(args.filePath))
+
 
 def _main():
     parser = argparse.ArgumentParser(description='Projeny Visual Studio Opener')
@@ -112,6 +119,7 @@ def _main():
     installBindings(args)
 
     Runner().run(args)
+
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):

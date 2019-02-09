@@ -2,38 +2,38 @@
 import sys
 import os
 import webbrowser
+from argparse import Namespace
 
+from mtm.util import VarManager, UnityHelper, ScriptRunner, SystemHelper, MiscUtil, PlatformUtil
 from mtm.util.Assert import *
-import mtm.util.MiscUtil as MiscUtil
-import mtm.util.PlatformUtil as PlatformUtil
-
-
-from mtm.util.Platforms import Platforms
 from mtm.util.CommonSettings import ConfigFileName
-
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectMany
 from mtm.ioc.Inject import InjectOptional
-import mtm.ioc.IocAssertions as Assertions
+
+from prj.main import ProjectConfigChanger, PackageManager, VisualStudioHelper, ProjenyVisualStudioHelper
+from prj.main.ProjectTarget import ProjectTarget
 
 from prj.main.ProjenyConstants import ProjectConfigFileName
+from prj.reg import ReleaseSourceManager
+
 
 class PrjRunner:
-    _scriptRunner = Inject('ScriptRunner')
+    _scriptRunner: ScriptRunner = Inject('ScriptRunner')
     _config = Inject('Config')
-    _packageMgr = Inject('PackageManager')
-    _projectConfigChanger = Inject('ProjectConfigChanger')
-    _unityHelper = Inject('UnityHelper')
-    _varMgr = Inject('VarManager')
+    _packageMgr: PackageManager = Inject('PackageManager')
+    _projectConfigChanger: ProjectConfigChanger = Inject('ProjectConfigChanger')
+    _unityHelper: UnityHelper = Inject('UnityHelper')
+    _varMgr: VarManager = Inject('VarManager')
     _log = Inject('Logger')
     _mainConfig = InjectOptional('MainConfigPath', None)
-    _sys = Inject('SystemHelper')
-    _vsSolutionHelper = Inject('VisualStudioHelper')
-    _projVsHelper = Inject('ProjenyVisualStudioHelper')
-    _releaseSourceManager = Inject('ReleaseSourceManager')
+    _sys: SystemHelper = Inject('SystemHelper')
+    _vsSolutionHelper: VisualStudioHelper = Inject('VisualStudioHelper')
+    _projVsHelper: ProjenyVisualStudioHelper = Inject('ProjenyVisualStudioHelper')
+    _releaseSourceManager: ReleaseSourceManager = Inject('ReleaseSourceManager')
+    _args: Namespace
+    _target: ProjectTarget
 
-    def run(self, args):
+    def run(self, args: Namespace):
         self._args = self._processArgs(args)
         success = self._scriptRunner.runWrapper(self._runInternal)
         self._onBuildComplete(success)
@@ -42,7 +42,7 @@ class PrjRunner:
         if not success:
             sys.exit(1)
 
-    def _processArgs(self, args):
+    def _processArgs(self, args: Namespace) -> Namespace:
         if args.buildFullProject or args.buildFull:
             args.updateLinks = True
             args.updateUnitySolution = True
@@ -76,7 +76,7 @@ class PrjRunner:
             self._packageMgr.deleteProject(self._args.project)
 
         if self._args.createProject:
-            self._packageMgr.createProject(self._args.project, self._platform)
+            self._packageMgr.createProject(self._args.project, self._target)
 
         if self._args.projectAddPackageAssets:
             self._projectConfigChanger.addPackage(self._args.project, self._args.projectAddPackageAssets, True)
@@ -103,13 +103,13 @@ class PrjRunner:
             self._packageMgr.updateLinksForAllProjects()
 
         if self._args.initLinks:
-            self._packageMgr.checkProjectInitialized(self._args.project, self._platform)
+            self._packageMgr.checkProjectInitialized(self._args.project, self._target)
 
         if self._args.updateLinks:
-            self._packageMgr.updateProjectJunctions(self._args.project, self._platform)
+            self._packageMgr.updateProjectJunctions(self._args.project, self._target)
 
         if self._args.updateUnitySolution:
-            self._projVsHelper.updateUnitySolution(self._args.project, self._platform)
+            self._projVsHelper.updateUnitySolution(self._args.project, self._target)
 
         if self._args.updateCustomSolution:
             self._projVsHelper.updateCustomSolution(self._args.project, self._platform)
@@ -117,9 +117,9 @@ class PrjRunner:
     def buildPrebuildProjects(self, config = None):
         solutionPath = self._config.tryGetString(None, 'Prebuild', 'SolutionPath')
 
-        if solutionPath != None:
+        if solutionPath is not None:
             with self._log.heading('Building {0}'.format(os.path.basename(self._varMgr.expandPath(solutionPath)))):
-                if config == None:
+                if config is None:
                     config = self._config.tryGetString('Debug', 'Prebuild', 'SolutionConfig')
 
                 self._vsSolutionHelper.buildVisualStudioProject(solutionPath, config)
@@ -147,7 +147,7 @@ class PrjRunner:
             self._unityHelper.openUnity(self._args.project, self._platform)
 
         if self._args.openCustomSolution:
-            self._projVsHelper.openCustomSolution(self._args.project, self._platform)
+            self._projVsHelper.openCustomSolution(self._args.project, self._target)
 
         if self._args.editProjectYaml:
             self._editProjectYaml()
@@ -158,10 +158,12 @@ class PrjRunner:
         os.startfile(schemaPath)
 
     def _initialize(self):
-        self._platform = PlatformUtil.fromPlatformArgName(self._args.platform)
+        platform = PlatformUtil.fromPlatformArgName(self._args.platform)
+        tag = self._args.tag
+        self._target = ProjectTarget(platform, tag)
 
-        if self._args.project and self._platform:
-            self._packageMgr.setPathsForProjectPlatform(self._args.project, self._platform)
+        if self._args.project and platform:
+            self._packageMgr.setPathsForProjectPlatform(self._args.project, self._target)
 
     def _runInternal(self):
         self._log.debug("Started Prj with arguments: {0}".format(" ".join(sys.argv[1:])))

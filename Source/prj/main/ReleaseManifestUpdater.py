@@ -5,44 +5,26 @@ import os
 import argparse
 
 import mtm.util.MiscUtil as MiscUtil
-import mtm.util.PlatformUtil as PlatformUtil
-
-from mtm.config.YamlConfigLoader import loadYamlFilesThatExist
 from mtm.config.Config import Config
 from mtm.util.VarManager import VarManager
-from mtm.util.ZipHelper import ZipHelper
 from mtm.log.Logger import Logger
 from mtm.util.SystemHelper import SystemHelper
 from mtm.log.LogStreamFile import LogStreamFile
 from mtm.log.LogStreamConsole import LogStreamConsole
 from mtm.util.ProcessRunner import ProcessRunner
-from mtm.util.JunctionHelper import JunctionHelper
-from prj.main.VisualStudioSolutionGenerator import VisualStudioSolutionGenerator
-from prj.main.VisualStudioHelper import VisualStudioHelper
-from prj.main.ProjectSchemaLoader import ProjectSchemaLoader
 from mtm.util.ScriptRunner import ScriptRunner
-from mtm.util.CommonSettings import CommonSettings
-from prj.reg.UnityPackageExtractor import UnityPackageExtractor
 from prj.reg.UnityPackageAnalyzer import UnityPackageAnalyzer
 
 import time
 
-from mtm.util.CommonSettings import ConfigFileName
-from prj.reg.ReleaseSourceManager import ReleaseSourceManager
 
 import mtm.util.YamlSerializer as YamlSerializer
 
-from prj.main.PrjRunner import PrjRunner
-
 from mtm.util.Assert import *
-
-from mtm.util.Platforms import Platforms
-from prj.main.PackageManager import PackageManager
 
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
 
-from mtm.util.UnityHelper import UnityHelper
 
 # Use TXT to play nicely with MIME types
 ReleaseManifestFileName = 'ProjenyReleaseManifest.txt'

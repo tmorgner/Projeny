@@ -1,37 +1,44 @@
-
-import sys
 import re
 import os
+from typing import Dict, List, Set, Union
 
+from mtm.log.Logger import Logger
 from mtm.util.Assert import *
 from mtm.util.Platforms import Platforms
-import mtm.util.Util as Util
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-import mtm.ioc.IocAssertions as Assertions
-import mtm.util.JunctionUtil as JunctionUtil
 from mtm.config.Config import Config
 from mtm.config.YamlConfigLoader import loadYamlFilesThatExist
+from mtm.util.SystemHelper import SystemHelper
+from mtm.util.VarManager import VarManager
+from prj.main.ProjectTarget import ProjectTarget
+from prj.main.AssemblyProjectInfo import AssemblyProjectInfo
 
+from prj.main.PackageData import PackageData
 from prj.main.CsProjAnalyzer import NsPrefix, CsProjAnalyzer
-from prj.main.ProjenyConstants import ProjectConfigFileName, PackageConfigFileName, ProjectUserConfigFileName
+from prj.main.FolderTypes import FolderTypes
+from prj.main.ProjectSchema import ProjectSchema
+from prj.main.ProjenyConstants import ProjectConfigFileName, \
+    PackageConfigFileName, \
+    ProjectUserConfigFileName
 from prj.main.ProjectConfig import ProjectConfig
 
 from collections import OrderedDict
-import xml.etree.ElementTree as ET
+
 
 class ProjectSchemaLoader:
-    _varMgr = Inject('VarManager')
-    _log = Inject('Logger')
-    _sys = Inject('SystemHelper')
+    _varMgr: VarManager = Inject('VarManager')
+    _log: Logger = Inject('Logger')
+    _sys: SystemHelper = Inject('SystemHelper')
 
-    def loadSchema(self, name, platform):
+    def loadSchema(self, name: str, projectTarget: ProjectTarget) -> ProjectSchema:
         try:
-            return self._loadSchemaInternal(name, platform)
+            return self._loadSchemaInternal(name, projectTarget)
         except Exception as e:
-            raise Exception("Failed while processing config yaml for project '{0}' (platform '{1}'). Details: {2}".format(name, platform, str(e))) from e
+            raise Exception(
+                "Failed while processing config yaml for project '{0}' (platform '{1}'; tag '2'). Details: {3}".format(
+                    name, projectTarget.target, projectTarget.tag, str(e))) from e
 
-    def loadProjectConfig(self, name):
+    def loadProjectConfig(self, name: str) -> ProjectConfig:
         schemaPath = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(name, ProjectConfigFileName))
         schemaPathUser = self._varMgr.expandPath('[UnityProjectsDir]/{0}/{1}'.format(name, ProjectUserConfigFileName))
         schemaPathGlobal = self._varMgr.expandPath('[UnityProjectsDir]/{0}'.format(ProjectConfigFileName))
@@ -50,22 +57,26 @@ class ProjectSchemaLoader:
         config.packageFolders = yamlConfig.getList('PackageFolders')
         config.projectSettingsPath = yamlConfig.getString('ProjectSettingsPath')
         config.unityPackagesPath = yamlConfig.getString('UnityPackagesPath')
+        config.targets = yamlConfig.tryGetOrderedDictionary(OrderedDict(), 'Targets')
+        config.upgradePlatforms()
 
         # Remove duplicates
         config.assetsFolder = list(set(config.assetsFolder))
         config.pluginsFolder = list(set(config.pluginsFolder))
 
         for packageName in config.pluginsFolder:
-            assertThat(not packageName in config.assetsFolder, "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(packageName))
+            assertThat(packageName not in config.assetsFolder,
+                       "Found package '{0}' in both scripts and plugins.  Must be in only one or the other".format(
+                           packageName))
 
         return config
 
-    def _loadSchemaInternal(self, name, platform):
+    def _loadSchemaInternal(self, name: str, projectTarget: ProjectTarget) -> ProjectSchema:
 
         config = self.loadProjectConfig(name)
 
         # Search all the given packages and any new packages that are dependencies and create PackageInfo() objects for each
-        packageMap = self._getAllPackageInfos(config, platform)
+        packageMap = self._getAllPackageInfos(config, projectTarget.target)
 
         self._addGroupedDependenciesAsExplicitDependencies(packageMap)
 
@@ -84,7 +95,9 @@ class ProjectSchemaLoader:
         self._printDependencyTree(packageMap)
 
         for customProj in config.solutionProjects:
-            assertThat(customProj.startswith('/') or customProj in packageMap, 'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(customProj))
+            assertThat(customProj.startswith('/') or customProj in packageMap,
+                       'Given project "{0}" in schema is not included in either "scripts" or "plugins"'.format(
+                           customProj))
 
         self._log.debug('Found {0} packages in total for given schema'.format(len(packageMap)))
 
@@ -100,9 +113,10 @@ class ProjectSchemaLoader:
 
         self._ensureAllPackagesExist(packageMap)
 
-        return ProjectSchema(name, packageMap, config.solutionFolders, config.projectSettingsPath, config.unityPackagesPath, platform, config.targetPlatforms)
+        return ProjectSchema(name, packageMap, config.solutionFolders, config.projectSettingsPath,
+                             config.unityPackagesPath, projectTarget, config.targets)
 
-    def _shouldIncludeForPlatform(self, packageName, packageConfig, folderType, platform):
+    def _shouldIncludeForPlatform(self, packageName, packageConfig, folderType, platform) -> bool:
 
         if folderType == FolderTypes.AndroidProject or folderType == FolderTypes.AndroidLibraries:
             allowedPlatforms = [Platforms.Android]
@@ -117,12 +131,13 @@ class ProjectSchemaLoader:
                 return True
 
         if platform not in allowedPlatforms:
-            self._log.debug("Skipped project '{0}' since it is not enabled for platform '{1}'".format(packageName, platform))
+            self._log.debug(
+                "Skipped project '{0}' since it is not enabled for platform '{1}'".format(packageName, platform))
             return False
 
         return True
 
-    def _getFolderTypeFromString(self, value):
+    def _getFolderTypeFromString(self, value) -> str:
         value = value.lower()
 
         if not value or value == FolderTypes.Normal or len(value) == 0:
@@ -146,11 +161,12 @@ class ProjectSchemaLoader:
         assertThat(False, "Unrecognized folder type '{0}'".format(value))
         return ""
 
-    def _getAllPackageInfos(self, projectConfig, platform):
+    def _getAllPackageInfos(self, projectConfig: ProjectConfig, platform: str) -> Dict[str, PackageData]:
         configRefDesc = "'{0}' or '{1}'".format(ProjectConfigFileName, ProjectUserConfigFileName)
-        allPackageRefs = [PackageReference(x, configRefDesc) for x in projectConfig.pluginsFolder + projectConfig.assetsFolder]
+        allPackageRefs = [PackageReference(x, configRefDesc) for x in
+                          projectConfig.pluginsFolder + projectConfig.assetsFolder]
 
-        packageMap = {}
+        packageMap: Dict[str, PackageData] = {}
 
         # Resolve all dependencies for each package
         # by default, put any dependencies that are not declared explicitly into the plugins folder
@@ -166,7 +182,9 @@ class ProjectSchemaLoader:
                     packageDir = self._varMgr.expandPath(candidatePackageDir)
                     break
 
-            assertIsNotNone(packageDir, "Could not find package '{0}' in any of the package directories!  Referenced in {1}", packageName, packageRef.sourceDesc)
+            assertIsNotNone(packageDir,
+                            "Could not find package '{0}' in any of the package directories!  Referenced in {1}",
+                            packageName, packageRef.sourceDesc)
 
             configPath = os.path.join(packageDir, PackageConfigFileName)
 
@@ -185,7 +203,7 @@ class ProjectSchemaLoader:
             isPluginsDir = True
 
             if packageName in projectConfig.assetsFolder:
-                assertThat(not packageName in projectConfig.pluginsFolder)
+                assertThat(packageName not in projectConfig.pluginsFolder)
                 isPluginsDir = False
 
             if packageConfig.tryGetBool(False, 'ForceAssetsDirectory'):
@@ -199,7 +217,7 @@ class ProjectSchemaLoader:
 
             sourceDesc = '"{0}"'.format(configPath)
 
-            if assemblyProjInfo != None:
+            if assemblyProjInfo is not None:
                 for assemblyDependName in assemblyProjInfo.dependencies:
                     if assemblyDependName not in [x.name for x in allPackageRefs]:
                         allPackageRefs.append(PackageReference(assemblyDependName, sourceDesc))
@@ -211,7 +229,7 @@ class ProjectSchemaLoader:
 
             assertThat(not packageName in packageMap, "Found duplicate package with name '{0}'", packageName)
 
-            packageMap[packageName] = PackageInfo(
+            packageMap[packageName] = PackageData(
                 isPluginsDir, packageName, packageConfig, createCustomVsProject,
                 explicitDependencies, forcePluginsDir, folderType, assemblyProjInfo, packageDir, groupedDependencies)
 
@@ -222,10 +240,10 @@ class ProjectSchemaLoader:
 
         return packageMap
 
-    def _tryGetAssemblyProjectInfo(self, packageConfig, packageName):
+    def _tryGetAssemblyProjectInfo(self, packageConfig: Config, packageName: str) -> Union[None, AssemblyProjectInfo]:
         assemblyProjectRelativePath = packageConfig.tryGetString(None, 'AssemblyProject', 'Path')
 
-        if assemblyProjectRelativePath == None:
+        if assemblyProjectRelativePath is None:
             return None
 
         projFullPath = self._varMgr.expand(assemblyProjectRelativePath)
@@ -238,10 +256,11 @@ class ProjectSchemaLoader:
         projAnalyzer = CsProjAnalyzer(projFullPath)
 
         assemblyName = projAnalyzer.getAssemblyName()
-        assertThat(assemblyName == '$(MSBuildProjectName)' or assemblyName.lower() == packageName.lower(), 'Packages that represent assembly projects must have the same name as the assembly')
+        assertThat(assemblyName == '$(MSBuildProjectName)' or assemblyName.lower() == packageName.lower(),
+                   'Packages that represent assembly projects must have the same name as the assembly')
 
         assertIsEqual(self._sys.getFileNameWithoutExtension(projFullPath).lower(), packageName.lower(),
-          'Assembly projects must have the same name as their package')
+                      'Assembly projects must have the same name as their package')
 
         projConfig = packageConfig.tryGetString(None, 'AssemblyProject', 'Config')
         dependencies = projAnalyzer.getProjectReferences()
@@ -249,23 +268,24 @@ class ProjectSchemaLoader:
         return AssemblyProjectInfo(
             projFullPath, projAnalyzer.root, projConfig, dependencies)
 
+    # Unused
     def getDependenciesFromCsProj(self, projectRoot):
         result = []
         for projRef in projectRoot.findall('./{0}ItemGroup/{0}ProjectReference/{0}Name'.format(NsPrefix)):
             result.append(projRef.text)
         return result
 
-    def _ensureAllPackagesExist(self, packageMap):
+    def _ensureAllPackagesExist(self, packageMap: Dict[str, PackageData]):
         for package in packageMap.values():
             assertThat(self._sys.directoryExists(package.dirPath),
-               "Could not find directory for package '{0}'", package.name)
+                       "Could not find directory for package '{0}'", package.name)
 
-    def _ensureVisiblePrebuiltProjectHaveVisibleDependencies(self, packageMap):
+    def _ensureVisiblePrebuiltProjectHaveVisibleDependencies(self, packageMap: Dict[str, PackageData]):
         for package in packageMap.values():
-            if package.assemblyProjectInfo != None and package.createCustomVsProject:
+            if package.assemblyProjectInfo is not None and package.createCustomVsProject:
                 self._makeAllPrebuiltDependenciesVisible(package, packageMap)
 
-    def _makeAllPrebuiltDependenciesVisible(self, package, packageMap):
+    def _makeAllPrebuiltDependenciesVisible(self, package: PackageData, packageMap: Dict[str, PackageData]):
         for dependName in package.explicitDependencies:
             depend = packageMap[dependName]
 
@@ -273,25 +293,27 @@ class ProjectSchemaLoader:
                 depend.createCustomVsProject = True
                 self._makeAllPrebuiltDependenciesVisible(depend, packageMap)
 
-    def _ensurePrebuiltProjectDependenciesArePrebuilt(self, packageMap):
+    def _ensurePrebuiltProjectDependenciesArePrebuilt(self, packageMap: Dict[str, PackageData]):
         for packageInfo in packageMap.values():
             assInfo = packageInfo.assemblyProjectInfo
 
-            if assInfo == None:
+            if assInfo is None:
                 continue
 
             for dependName in assInfo.dependencies:
                 depend = packageMap[dependName]
-                assertThat(depend.assemblyProjectInfo != None,
-                   "Expected package '{0}' to have an assembly project defined, since another assembly project ({1}) depends on it", dependName, packageInfo.name)
+                assertThat(depend.assemblyProjectInfo is not None,
+                           "Expected package '{0}' to have an assembly project defined, since another assembly project ({1}) depends on it",
+                           dependName, packageInfo.name)
 
-    def _ensurePrebuiltProjectsHaveNoScripts(self, packageMap):
+    def _ensurePrebuiltProjectsHaveNoScripts(self, packageMap: Dict[str, PackageData]):
         for package in packageMap.values():
-            if package.assemblyProjectInfo != None:
+            if package.assemblyProjectInfo is not None:
                 assertThat(not any(self._sys.findFilesByPattern(package.dirPath, '*.cs')),
-                   "Found C# scripts in assembly project '{0}'.  This is not allowed - please move to a separate package.", package.name)
+                           "Found C# scripts in assembly project '{0}'.  This is not allowed - please move to a separate package.",
+                           package.name)
 
-    def _ensurePackagesThatAreNotProjectsDoNotHaveProjectDependencies(self, packageMap):
+    def _ensurePackagesThatAreNotProjectsDoNotHaveProjectDependencies(self, packageMap: Dict[str, PackageData]):
         changedOne = True
 
         while changedOne:
@@ -300,12 +322,14 @@ class ProjectSchemaLoader:
             for info in packageMap.values():
                 if not info.createCustomVsProject and self._hasVsProjectDependency(info, packageMap):
                     info.createCustomVsProject = True
-                    self._log.debug('Created visual studio project for {0} package even though it wasnt marked as one, because it has csproj dependencies'.format(info.name))
+                    self._log.debug(
+                        'Created visual studio project for {0} package even though it wasnt marked as one, because it has csproj dependencies'.format(
+                            info.name))
                     changedOne = True
 
-    def _hasVsProjectDependency(self, info, packageMap):
+    def _hasVsProjectDependency(self, info: PackageData, packageMap: Dict[str, PackageData]):
         for dependName in info.allDependencies:
-            if not dependName in packageMap:
+            if dependName not in packageMap:
                 # For eg. a platform specific dependency
                 continue
 
@@ -316,7 +340,7 @@ class ProjectSchemaLoader:
 
         return False
 
-    def _ensurePluginPackagesDoNotHaveDependenciesInAssets(self, packageMap):
+    def _ensurePluginPackagesDoNotHaveDependenciesInAssets(self, packageMap: Dict[str, PackageData]):
         movedProject = True
 
         while movedProject:
@@ -325,10 +349,12 @@ class ProjectSchemaLoader:
             for info in packageMap.values():
                 if info.isPluginDir and self._hasAssetsDependency(info, packageMap):
                     info.isPluginDir = False
-                    self._log.debug('Moved {0} package to scripts folder since it has dependencies there and therefore cannot be in plugins'.format(info.name))
+                    self._log.debug(
+                        'Moved {0} package to scripts folder since it has dependencies there and therefore cannot be in plugins'.format(
+                            info.name))
                     movedProject = True
 
-    def _hasAssetsDependency(self, info, packageMap):
+    def _hasAssetsDependency(self, info: PackageData, packageMap: Dict[str, PackageData]):
         for dependName in info.allDependencies:
             if not dependName in packageMap:
                 # For eg. a platform specific dependency
@@ -341,15 +367,16 @@ class ProjectSchemaLoader:
 
         return False
 
-    def _printDependencyTree(self, packageMap):
-        packages = sorted(packageMap.values(), key = lambda p: (p.isPluginDir, -len(p.explicitDependencies)))
+    def _printDependencyTree(self, packageMap: Dict[str, PackageData]):
+        packages = sorted(packageMap.values(), key=lambda p: (p.isPluginDir, -len(p.explicitDependencies)))
 
         done = {}
 
         for pack in packages:
             self._printDependency(pack, done, 1, packageMap)
 
-    def _printDependency(self, package, done, indentCount, packageMap):
+    def _printDependency(self, package: PackageData, done: Dict[str, bool], indentCount: int,
+                         packageMap: Dict[str, PackageData]):
         done[package.name] = True
 
         indentInterval = '    '
@@ -364,9 +391,9 @@ class ProjectSchemaLoader:
                 if subPackage.name in done:
                     self._log.debug(indent + '.' + indentInterval + '|~' + subPackage.name)
                 else:
-                    self._printDependency(subPackage, done, indentCount+1, packageMap)
+                    self._printDependency(subPackage, done, indentCount + 1, packageMap)
 
-    def _shouldCreateVsProjectForName(self, packageName, solutionProjects):
+    def _shouldCreateVsProjectForName(self, packageName: str, solutionProjects: List[str]):
         if packageName in solutionProjects:
             return True
 
@@ -378,11 +405,16 @@ class ProjectSchemaLoader:
                     if re.match(projPattern, packageName):
                         return True
                 except Exception as e:
-                    raise Exception("Failed while parsing project regex '/{0}' from {1}/{2}.  Details: {3}".format(projPattern, self._varMgr.expand('ProjectName'), ProjectConfigFileName, str(e)))
+                    raise Exception(
+                        "Failed while parsing project regex '/{0}' from {1}/{2}.  Details: {3}".format(projPattern,
+                                                                                                       self._varMgr.expand(
+                                                                                                           'ProjectName'),
+                                                                                                       ProjectConfigFileName,
+                                                                                                       str(e)))
 
         return False
 
-    def _addGroupedDependenciesAsExplicitDependencies(self, packageMap):
+    def _addGroupedDependenciesAsExplicitDependencies(self, packageMap: Dict[str, PackageData]):
 
         # There is a bug here where it won't handle grouped dependencies within grouped dependencies
         for info in packageMap.values():
@@ -400,7 +432,7 @@ class ProjectSchemaLoader:
 
             info.explicitDependencies += list(extras)
 
-    def _calculateDependencyListForEachPackage(self, packageMap):
+    def _calculateDependencyListForEachPackage(self, packageMap: Dict[str, PackageData]):
 
         self._log.debug('Processing dependency tree')
 
@@ -409,10 +441,12 @@ class ProjectSchemaLoader:
         for info in packageMap.values():
             self._calculateDependencyListForPackage(info, packageMap, inProgress)
 
-    def _calculateDependencyListForPackage(self, packageInfo, packageMap, inProgress):
+    def _calculateDependencyListForPackage(self, packageInfo: PackageData, packageMap: Dict[str, PackageData],
+                                           inProgress: Set[str]):
 
         if packageInfo.name in inProgress:
-            assertThat(False, "Found circular dependency when processing package {0}.  Dependency list: {1}".format(packageInfo.name, ' -> '.join([x for x in inProgress]) + '-> ' + packageInfo.name))
+            assertThat(False, "Found circular dependency when processing package {0}.  Dependency list: {1}".format(
+                packageInfo.name, ' -> '.join([x for x in inProgress]) + '-> ' + packageInfo.name))
 
         inProgress.add(packageInfo.name)
         allDependencies = set(packageInfo.explicitDependencies)
@@ -424,7 +458,7 @@ class ProjectSchemaLoader:
 
             explicitDependInfo = packageMap[explicitDependName]
 
-            if explicitDependInfo.allDependencies == None:
+            if explicitDependInfo.allDependencies is None:
                 self._calculateDependencyListForPackage(explicitDependInfo, packageMap, inProgress)
 
             for dependName in explicitDependInfo.allDependencies:
@@ -433,74 +467,13 @@ class ProjectSchemaLoader:
         packageInfo.allDependencies = list(allDependencies)
         inProgress.remove(packageInfo.name)
 
+
 class PackageReference:
+    name: str
+    sourceDesc: str
+
     def __init__(self, name, sourceDesc):
         self.name = name
         self.sourceDesc = sourceDesc
-
-class ProjectSchema:
-    def __init__(self, name, packages, customFolderMap, projectSettingsPath, unityPackagesPath, platform, targetPlatforms):
-        self.name = name
-        self.packages = packages
-        self.customFolderMap = customFolderMap
-        self.projectSettingsPath = projectSettingsPath
-        self.unityPackagesPath = unityPackagesPath
-        self.platform = platform
-        self.targetPlatforms = targetPlatforms
-
-class FolderTypes:
-    Normal = "normal"
-    WebGl = "webgl"
-    AndroidProject = "androidproject"
-    AndroidLibraries = "androidlibraries"
-    Ios = "ios"
-    StreamingAssets = "streamingassets"
-
-class AssemblyProjectInfo:
-    def __init__(self, path, root, config, dependencies):
-        self.path = path
-        self.root = root
-        self.config = config
-        self.dependencies = dependencies
-
-class PackageInfo:
-    def __init__(
-        self, isPluginDir, name, config, createCustomVsProject,
-        explicitDependencies, forcePluginsDir, folderType, assemblyProjectInfo, dirPath, groupedDependencies):
-
-        self.isPluginDir = isPluginDir
-        self.name = name
-        self.explicitDependencies = explicitDependencies
-        self.config = config
-        self.createCustomVsProject = createCustomVsProject
-        self.allDependencies = None
-        self.folderType = folderType
-        self.assemblyProjectInfo = assemblyProjectInfo
-        self.forcePluginsDir = forcePluginsDir
-        self.dirPath = dirPath
-        self.groupedDependencies = groupedDependencies
-
-    @property
-    def outputDirVar(self):
-
-        if self.folderType == FolderTypes.AndroidProject:
-            return '[PluginsAndroidDir]'
-
-        if self.folderType == FolderTypes.AndroidLibraries:
-            return '[PluginsAndroidLibraryDir]'
-
-        if self.folderType == FolderTypes.Ios:
-            return '[PluginsIosLibraryDir]'
-
-        if self.folderType == FolderTypes.WebGl:
-            return '[PluginsWebGlLibraryDir]'
-
-        if self.folderType == FolderTypes.StreamingAssets:
-            return '[StreamingAssetsDir]'
-
-        if self.isPluginDir:
-            return '[PluginsDir]'
-
-        return '[ProjectAssetsDir]'
 
 

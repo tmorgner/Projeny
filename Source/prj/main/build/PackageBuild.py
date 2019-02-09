@@ -22,6 +22,7 @@ ProjenyDir = os.path.realpath(os.path.join(PythonDir, '..'))
 
 NsisPath = "C:/Utils/NSIS/makensis.exe"
 
+
 class Runner:
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
@@ -118,6 +119,7 @@ class Runner:
             self._sys.removeByRegex('[TempDir]/Bin/UnityPlugin/Release/*.pdb')
             self._sys.deleteDirectoryIfExists('[TempDir]/Bin/UnityPlugin/Debug')
 
+
 def installBindings():
 
     Container.bind('LogStream').toSingle(LogStreamFile)
@@ -125,6 +127,7 @@ def installBindings():
 
     demoConfig = os.path.realpath(os.path.join(ProjenyDir, 'Demo/Projeny.yaml'))
     Prj.installBindings(demoConfig)
+
 
 if __name__ == '__main__':
     if (sys.version_info < (3, 0)):

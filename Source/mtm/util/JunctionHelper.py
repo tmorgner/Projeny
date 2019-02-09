@@ -7,6 +7,7 @@ import mtm.util.JunctionUtil as JunctionUtil
 
 from mtm.util.Assert import *
 
+
 class JunctionHelper:
     """
     Misc. helper functions related to windows junctions
@@ -18,7 +19,7 @@ class JunctionHelper:
     def __init__(self):
         pass
 
-    def removeJunction(self, linkDir):
+    def removeJunction(self, linkDir: str):
         linkDir = self._varMgr.expand(linkDir)
         if os.path.isdir(linkDir) and JunctionUtil.islink(linkDir):
             try:
@@ -31,7 +32,7 @@ class JunctionHelper:
 
         return False
 
-    def makeJunction(self, actualPath, linkPath):
+    def makeJunction(self, actualPath: str, linkPath: str):
         actualPath = self._varMgr.expandPath(actualPath)
         linkPath = self._varMgr.expandPath(linkPath)
 
@@ -43,7 +44,7 @@ class JunctionHelper:
         # Note: mklink is a shell command and can't be executed otherwise
         self._sys.executeShellCommand('mklink /J "{0}" "{1}"'.format(linkPath, actualPath))
 
-    def removeJunctionsInDirectory(self, dirPath, recursive):
+    def removeJunctionsInDirectory(self, dirPath: str, recursive: bool):
         fullDirPath = self._varMgr.expandPath(dirPath)
 
         if not os.path.exists(fullDirPath):

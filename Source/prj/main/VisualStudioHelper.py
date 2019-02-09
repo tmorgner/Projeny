@@ -1,9 +1,8 @@
+from typing import Union
 
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectMany
-import mtm.ioc.IocAssertions as Assertions
 import mtm.util.MiscUtil as MiscUtil
+from mtm.log.Logger import Logger
 
 from mtm.util.CommonSettings import ConfigFileName
 
@@ -11,14 +10,17 @@ import win32api
 import win32com.client
 
 from mtm.util.Assert import *
+from mtm.util.SystemHelper import SystemHelper
+from mtm.util.VarManager import VarManager
+
 
 class VisualStudioHelper:
-    _log = Inject('Logger')
+    _log: Logger = Inject('Logger')
     _config = Inject('Config')
-    _varMgr = Inject('VarManager')
-    _sys = Inject('SystemHelper')
+    _varMgr: VarManager = Inject('VarManager')
+    _sys: SystemHelper = Inject('SystemHelper')
 
-    def openFile(self, filePath, lineNo, solutionPath):
+    def openFile(self, filePath: str, lineNo: int, solutionPath: str):
         if not lineNo or lineNo <= 0:
             lineNo = 1
 
@@ -31,7 +33,7 @@ class VisualStudioHelper:
             # Unfortunately, in this case we can't pass in the line number
             self.openVisualStudioSolution(solutionPath, filePath)
 
-    def openFileInExistingVisualStudioInstance(self, filePath, lineNo):
+    def openFileInExistingVisualStudioInstance(self, filePath: str, lineNo: int):
         try:
             vsPath = self._varMgr.expand('[VisualStudioIdePath]')
 
@@ -43,30 +45,32 @@ class VisualStudioHelper:
                 dte = win32com.client.GetActiveObject("VisualStudio.DTE.12.0")
             else:
                 assertThat(False, "Could not determine visual studio version")
+                return
 
+            # noinspection PyStatementEffect
             dte.MainWindow.Activate
             dte.ItemOperations.OpenFile(self._sys.canonicalizePath(filePath))
             dte.ActiveDocument.Selection.MoveToLineAndOffset(lineNo, 1)
         except Exception as error:
             raise Exception("COM Error.  This is often triggered when given a bad line number. Details: {0}".format(win32api.FormatMessage(error.excepinfo[5])))
 
-    def openVisualStudioSolution(self, solutionPath, filePath = None):
+    def openVisualStudioSolution(self, solutionPath: str, filePath: Union[str,None] = None):
 
         if self._varMgr.hasKey('VisualStudioIdePath'):
             assertThat(self._sys.fileExists('[VisualStudioIdePath]'),
                "Cannot find path to visual studio.  Expected to find it at '{0}'".format(self._varMgr.expand('[VisualStudioIdePath]')))
 
-            if solutionPath == None:
+            if solutionPath is None:
                 self._sys.executeNoWait('"[VisualStudioIdePath]" {0}'.format(self._sys.canonicalizePath(filePath) if filePath else ""))
             else:
                 solutionPath = self._sys.canonicalizePath(solutionPath)
                 self._sys.executeNoWait('"[VisualStudioIdePath]" {0} {1}'.format(solutionPath, self._sys.canonicalizePath(filePath) if filePath else ""))
         else:
-            assertThat(filePath == None,
+            assertThat(filePath is None,
                "Path to visual studio has not been defined.  Please set <VisualStudioIdePath> within one of your {0} files.  See documentation for details.", ConfigFileName)
             self._sys.executeShellCommand(solutionPath, None, False)
 
-    def buildVisualStudioProject(self, solutionPath, buildConfig):
+    def buildVisualStudioProject(self, solutionPath: str, buildConfig: str):
         solutionPath = self._varMgr.expand(solutionPath)
         if self._config.getBool('Compilation', 'UseDevenv'):
             buildCommand = '"[VisualStudioCommandLinePath]" {0} /build "{1}"'.format(solutionPath, buildConfig)
