@@ -6,7 +6,7 @@ from cx_Freeze import setup, Executable
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 BuildDir = os.path.join(ScriptDir, 'build')
-BuildPlatformDir = os.path.join(BuildDir, 'exe.win32-3.6')
+BuildPlatformDir = os.path.join(BuildDir, 'result')
 OutDir = os.path.join(ScriptDir, '../Bin/Data')
 
 print("Removing previous build directories...")
@@ -19,7 +19,7 @@ if os.path.exists(OutDir):
 
 print("Building exes..")
 base = None
-build_exe_options = {"packages": [], "excludes": []}
+build_exe_options = {"packages": [], "excludes": [], "build_exe": BuildPlatformDir}
 executables = [
     Executable(script = "prj/main/Prj.py", base = base, targetName = 'Prj.exe'),
     Executable(script = "prj/main/EditorApi.py", targetName = "EditorApi.exe", base=base),
