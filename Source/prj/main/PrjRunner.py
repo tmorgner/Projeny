@@ -112,7 +112,7 @@ class PrjRunner:
             self._projVsHelper.updateUnitySolution(self._args.project, self._target)
 
         if self._args.updateCustomSolution:
-            self._projVsHelper.updateCustomSolution(self._args.project, self._platform)
+            self._projVsHelper.updateCustomSolution(self._args.project, self._target)
 
     def buildPrebuildProjects(self, config = None):
         solutionPath = self._config.tryGetString(None, 'Prebuild', 'SolutionPath')
@@ -129,7 +129,7 @@ class PrjRunner:
 
     def _runBuild(self):
         if self._args.buildCustomSolution:
-            self._projVsHelper.buildCustomSolution(self._args.project, self._platform)
+            self._projVsHelper.buildCustomSolution(self._args.project, self._target)
 
     def _runPostBuild(self):
 
@@ -139,12 +139,15 @@ class PrjRunner:
         if self._args.listProjects:
             self._packageMgr.listAllProjects()
 
+        if self._args.listTags:
+            self._packageMgr.listTags(self._args.project, self._target.target)
+
         if self._args.listPackages:
             self._packageMgr.listAllPackages(self._args.project)
 
         if self._args.openUnity:
-            self._packageMgr.checkProjectInitialized(self._args.project, self._platform)
-            self._unityHelper.openUnity(self._args.project, self._platform)
+            self._packageMgr.checkProjectInitialized(self._args.project, self._target)
+            self._unityHelper.openUnity(self._args.project, self._target)
 
         if self._args.openCustomSolution:
             self._projVsHelper.openCustomSolution(self._args.project, self._target)
@@ -160,6 +163,9 @@ class PrjRunner:
     def _initialize(self):
         platform = PlatformUtil.fromPlatformArgName(self._args.platform)
         tag = self._args.tag
+        if tag is "None":
+            tag = None
+
         self._target = ProjectTarget(platform, tag)
 
         if self._args.project and platform:
@@ -176,13 +182,21 @@ class PrjRunner:
         self._runPostBuild()
 
     def _argsRequiresProject(self):
-        return self._args.updateLinks or self._args.updateUnitySolution \
-           or self._args.updateCustomSolution or self._args.buildCustomSolution \
-           or self._args.clearProjectGeneratedFiles or self._args.buildFull \
-           or self._args.openUnity or self._args.openCustomSolution \
-           or self._args.editProjectYaml or self._args.createProject \
-           or self._args.projectAddPackageAssets or self._args.projectAddPackagePlugins \
-           or self._args.deleteProject or self._args.listPackages
+        return self._args.updateLinks or \
+               self._args.updateUnitySolution or \
+               self._args.updateCustomSolution or \
+               self._args.buildCustomSolution or \
+               self._args.clearProjectGeneratedFiles or \
+               self._args.buildFull or \
+               self._args.openUnity or \
+               self._args.openCustomSolution or \
+               self._args.editProjectYaml or \
+               self._args.createProject or \
+               self._args.projectAddPackageAssets or \
+               self._args.projectAddPackagePlugins or \
+               self._args.deleteProject or \
+               self._args.listPackages or \
+               self._args.listTags
 
     def _validateRequest(self):
 

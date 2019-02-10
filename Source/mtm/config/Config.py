@@ -1,3 +1,4 @@
+from typing import List, Any
 
 import yaml
 
@@ -11,8 +12,10 @@ import mtm.ioc.IocAssertions as Assertions
 
 from collections import OrderedDict
 
+
 class Config:
     ''' Build config info  (eg. path info, etc.) '''
+    configs: List[Any]
 
     def __init__(self, configs):
         assertThat(all(x != None for x in configs))
@@ -137,7 +140,7 @@ class Config:
     def tryGetOrderedDictionary(self, fallback, *args):
         dictionaries = self.tryGetList(None, *args)
 
-        if dictionaries == None:
+        if dictionaries is None:
             return fallback
 
         result = OrderedDict()

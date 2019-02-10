@@ -13,11 +13,11 @@ from mtm.ioc.Inject import Inject
 from mtm.ioc.Inject import InjectMany
 from mtm.util.Assert import *
 
-import prj.main.ProjectConfigChanger as ProjectConfigChanger
+from prj.main.ProjectConfigChanger import ProjectConfigChanger
 from prj.main.PackageData import PackageData
 from prj.main.ProjectSchema import ProjectSchema
 from prj.main.ProjectTarget import ProjectTarget
-from prj.main import UnityEditorMenuGenerator
+from prj.main.UnityEditorMenuGenerator import UnityEditorMenuGenerator
 from prj.main.ProjectSchemaLoader import ProjectSchemaLoader
 from prj.main.FolderTypes import FolderTypes
 from prj.reg.PackageInfo import PackageInfo, PackageFolderInfo
@@ -50,7 +50,7 @@ class PackageManager:
     _projectInitHandlers = InjectMany('ProjectInitHandlers')
     _schemaLoader: ProjectSchemaLoader = Inject('ProjectSchemaLoader')
     _commonSettings = Inject('CommonSettings')
-    _projectConfigChanger: ProjectConfigChanger = Inject('ProjectConfigChanger')
+    _projectConfigChanger: ProjectConfigChanger = Inject[ProjectConfigChanger]('ProjectConfigChanger')
     _unityEditorMenuGenerator: UnityEditorMenuGenerator = Inject('UnityEditorMenuGenerator')
 
     def projectExists(self, projectName: str):
@@ -72,6 +72,20 @@ class PackageManager:
                 output += " (default)"
 
             self._log.info("  " + output)
+
+    def listTags(self, projectName: str, platform: str):
+        schema = self._schemaLoader.loadProjectConfig(projectName)
+        tags = []
+
+        for t in schema.targets:
+            print(t.ToName())
+            if t.tag is None:
+                continue
+
+            if t.target == platform and t.tag not in tags:
+                tags.append(t.tag)
+
+        self._log.info("Tags: " + ','.join(map(str, tags)))
 
     def listAllPackages(self, projectName: str):
         packagesNames = self.getAllPackageNames(projectName)
@@ -326,7 +340,8 @@ UnityPackagesPath: '{1}'
             self._addGeneratedProjenyFiles('[PluginsDir]/Projeny', schema)
 
         self._junctionHelper.makeJunction(schema.projectSettingsPath, '[ProjectPlatformRoot]/ProjectSettings')
-        self._junctionHelper.makeJunction(schema.unityPackagesPath, '[ProjectPlatformRoot]/Packages')
+        if schema.unityPackagesPath is not None:
+            self._junctionHelper.makeJunction(schema.unityPackagesPath, '[ProjectPlatformRoot]/Packages')
 
         for packageInfo in schema.packages.values():
             self._log.debug('Processing package "{0}"'.format(packageInfo.name))
@@ -480,7 +495,8 @@ UnityPackagesPath: '{1}'
                 self._log.debug('Created directory "{0}"'.format(self._varMgr.expandPath('[ProjectPlatformRoot]')))
 
                 self._junctionHelper.makeJunction(schema.projectSettingsPath, '[ProjectPlatformRoot]/ProjectSettings')
-                self._junctionHelper.makeJunction(schema.unityPackagesPath, '[ProjectPlatformRoot]/Packages')
+                if schema.unityPackagesPath is not None:
+                    self._junctionHelper.makeJunction(schema.unityPackagesPath, '[ProjectPlatformRoot]/Packages')
 
                 self._updateDirLinksForSchema(schema)
 

@@ -59,7 +59,7 @@ class VarManager:
     def set(self, key, value):
         self._params[key] = value
 
-    def expandPath(self, text, extraVars = None):
+    def expandPath(self, text: str, extraVars = None):
         ''' Same as expand() except it cleans up the path to remove ../ '''
         return os.path.realpath(self.expand(text, extraVars))
 

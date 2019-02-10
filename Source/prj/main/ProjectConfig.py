@@ -25,3 +25,10 @@ class ProjectConfig:
                 target_def = ProjectTarget(platform)
                 self.targets.append(target_def)
 
+        cleanTargets = []
+        for t in self.targets:
+            target = ProjectTarget(t.target, t.tag)
+            cleanTargets.append(target)
+
+        self.targets = cleanTargets
+

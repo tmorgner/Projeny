@@ -1,0 +1,43 @@
+# Default values
+# These can all be overriden by user config files
+
+MaxProjectNameLength: 64 
+
+# Set to true if you don't want to use the Projeny editor DLL and instead want to link directly
+# to UnityPlugin\Projeny
+LinkToProjenyEditorDir: False
+
+ReleaseSources:
+    - AssetStoreCache:
+
+PathVars:
+    ProjTemplatesDir: '[ProjenyDir]/../../Content/Shared/Templates'
+
+    CsProjectTemplate: '[ProjTemplatesDir]/CsProjectTemplate.csproj'
+    CsSolutionTemplate: '[ProjTemplatesDir]/CsSolutionTemplate.sln'
+
+    PlaceholderFile1: '[ProjTemplatesDir]/Placeholder1/Placeholder.cs'
+    PlaceholderFile2: '[ProjTemplatesDir]/Placeholder2/Placeholder.cs'
+
+    ProjenyChangeProjectMenuMeta: '[ProjTemplatesDir]/ProjenyChangeProjectMenu.cs.meta'
+
+    ProjectRootGitIgnoreTemplate: '[ProjTemplatesDir]/customProjectRootGitIgnore'
+    ProjectRootSvnIgnoreTemplate: '[ProjTemplatesDir]/customProjectRootSvnIgnore'
+
+    YamlDotNetDllPath: '[ProjenyDir]/../../Bin/Build/UnityPlugin/Debug/YamlDotNet.dll'
+    ProjenyUnityEditorDllPath: '[ProjenyDir]/../../Bin/Build/UnityPlugin/Debug/Projeny.dll'
+    ProjenyUnityEditorDllMetaFilePath: '[ProjTemplatesDir]/Projeny.dll.meta'
+    ProjenyUnityEditorAssetsDirPath: '[ProjTemplatesDir]/../UnityPlugin/Projeny/Assets'
+
+    # Note that these are defaults, and can be overridden in any other Projeny.yaml file
+    MsBuildExePath: 'C:/Windows/Microsoft.NET/Framework/v4.0.30319/msbuild.exe'
+    UnityExePath: 'C:/Program Files/Unity/Editor/Unity.exe'
+
+Console:
+    UseColors: False
+    OutputToFilteredLog: False
+
+Compilation:
+    UseDevenv: False
+
+IncludeProjenyInGeneratedSolution: False

@@ -22,7 +22,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Unity Debug' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Bin\UnityPlugin\Debug\</OutputPath>
+    <OutputPath>..\..\Bin\Build\UnityPlugin\Debug\</OutputPath>
     <IntermediateOutputPath>..\..\Temp\obj\Debug\</IntermediateOutputPath>
     <BaseIntermediateOutputPath>..\..\Temp\obj\Debug\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
@@ -34,7 +34,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Unity Release' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Bin\UnityPlugin\Release\</OutputPath>
+    <OutputPath>..\..\Bin\Build\UnityPlugin\Release\</OutputPath>
     <IntermediateOutputPath>..\..\Temp\obj\Release\</IntermediateOutputPath>
     <BaseIntermediateOutputPath>..\..\Temp\obj\Release\</BaseIntermediateOutputPath>
     <DefineConstants>
@@ -55,9 +55,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="UnityEditor">
       <HintPath>..\Libraries\Unity\UnityEditor.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\Libraries\Unity\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -127,9 +129,7 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Util\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
   </PropertyGroup>

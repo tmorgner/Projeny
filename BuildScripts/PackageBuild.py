@@ -5,22 +5,17 @@ from mtm.log.LogStreamFile import LogStreamFile
 import os
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectOptional
-import mtm.ioc.IocAssertions as Assertions
-
-from mtm.config.Config import Config
 from mtm.log.LogStreamConsole import LogStreamConsole
 from mtm.util.CommonSettings import ConfigFileName
-import mtm.util.MiscUtil as MiscUtil
 
 from mtm.util.Assert import *
 import prj.main.Prj as Prj
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
-PythonDir = os.path.realpath(os.path.join(ScriptDir, '../..'))
-ProjenyDir = os.path.realpath(os.path.join(PythonDir, '..'))
+ProjectRootDir = os.path.realpath(os.path.join(ScriptDir, '..'))
+BuildScriptDir = os.path.realpath(os.path.join(ProjectRootDir, 'BuildScripts'))
 
-NsisPath = "C:/Utils/NSIS/makensis.exe"
+NsisPath = os.path.realpath(os.path.join(BuildScriptDir, 'nsis-3.04/makensis.exe'))
 
 
 class Runner:
@@ -46,11 +41,11 @@ class Runner:
         self._sys.copyFile('[ProjenyDir]/' + relativePath, '[TempDir]/' + relativePath)
 
     def _runInternal(self):
-        self._varMgr.add('PythonDir', PythonDir)
-        self._varMgr.add('ProjenyDir', ProjenyDir)
+        self._varMgr.add('BuildScriptDir', BuildScriptDir)
+        self._varMgr.add('ProjenyDir', ProjectRootDir)
         self._varMgr.add('SourceDir', '[ProjenyDir]/Source')
         self._varMgr.add('InstallerDir', '[ProjenyDir]/Installer')
-        self._varMgr.add('TempDir', '[InstallerDir]/Build')
+        self._varMgr.add('TempDir', '[InstallerDir]/Build/Temp')
         self._varMgr.add('DistDir', '[InstallerDir]/Dist')
 
         self._sys.deleteAndReCreateDirectory('[DistDir]')
@@ -103,7 +98,7 @@ class Runner:
         self._sys.deleteAndReCreateDirectory('[TempDir]')
 
         with self._log.heading('Building exes'):
-            self._sys.executeAndWait('[PythonDir]/BuildAllExes.bat')
+            self._sys.executeAndWait('[BuildScriptDir]/BuildAllExes.bat')
 
         with self._log.heading('Building unity plugin dlls'):
             self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', 'Release')

@@ -6,6 +6,9 @@ class YamlData:
     def __init__(self, data):
         self.__dict__.update(data)
 
+    def __str__(self):
+        return str(self.__dict__)
+
 def serialize(obj):
     # width is necessary otherwise it can insert newlines into string values
     return yaml.dump(_serializeObj(obj), width=9999999, default_flow_style=False)

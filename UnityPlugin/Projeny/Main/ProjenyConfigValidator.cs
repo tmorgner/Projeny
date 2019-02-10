@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 
 namespace Projeny.Internal
 {
+    [UsedImplicitly]
     public class ProjenyConfigValidator : AssetPostprocessor
     {
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)

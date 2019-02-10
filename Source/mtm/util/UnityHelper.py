@@ -51,7 +51,7 @@ class UnityHelper:
 
     def openUnity(self, projectName, platform):
         with self._log.heading('Opening Unity'):
-            projectPath = self._sys.canonicalizePath("[UnityProjectsDir]/{0}/{1}-{2}".format(projectName, self._commonSettings.getShortProjectName(projectName), PlatformUtil.toPlatformFolderName(platform)))
+            projectPath = self._sys.canonicalizePath("[UnityProjectsDir]/{0}/{1}-{2}".format(projectName, self._commonSettings.getShortProjectName(projectName), PlatformUtil.toPlatformTargetFolderName(platform)))
             self._sys.executeNoWait('"[UnityExePath]" -buildTarget {0} -projectPath "{1}"'.format(self._getBuildTargetArg(platform), projectPath))
 
     def _getBuildTargetArg(self, platform):
@@ -96,7 +96,7 @@ class UnityHelper:
         assertThat(self._varMgr.hasKey('UnityExePath'), "Could not find path variable 'UnityExePath'")
 
         try:
-            command = '"[UnityExePath]" -buildTarget {0} -projectPath "[UnityProjectsDir]/{1}/{2}-{3}"'.format(self._getBuildTargetArg(platform), projectName, self._commonSettings.getShortProjectName(projectName), PlatformUtil.toPlatformFolderName(platform))
+            command = '"[UnityExePath]" -buildTarget {0} -projectPath "[UnityProjectsDir]/{1}/{2}-{3}"'.format(self._getBuildTargetArg(platform), projectName, self._commonSettings.getShortProjectName(projectName), PlatformUtil.toPlatformTargetFolderName(platform))
 
             if editorCommand:
                 command += ' -executeMethod ' + editorCommand

@@ -18,3 +18,6 @@ class ProjectTarget:
             return self.target
         else:
             return self.target + "; " + self.tag
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__

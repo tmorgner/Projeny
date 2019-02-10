@@ -67,6 +67,7 @@ def addArguments(parser: argparse.ArgumentParser):
 
     # Projects
     parser.add_argument('-lpr', '--listProjects', action='store_true', help='Display the list of all projects that are in the UnityProjects directory')
+    parser.add_argument('-lpt', '--listTags', action='store_true', help='Display the list of all tags for the current project and platform')
     parser.add_argument('-ul', '--updateLinks', action='store_true', help='Updates directory links for the given project and the given platform')
     parser.add_argument('-clp', '--clearProjectGeneratedFiles', action='store_true', help='Remove all generated files for the given project.  This can be reversed easily by re-initializing the project')
     parser.add_argument('-cla', '--clearAllProjectGeneratedFiles', action='store_true', help='Remove all the generated files for all projects. This can be reversed easily by running the init command')
@@ -107,9 +108,9 @@ def _getProjenyDir() -> str:
 
     if not MiscUtil.isRunningAsExe():
         scriptDir = os.path.dirname(os.path.realpath(__file__))
-        return os.path.join(scriptDir, '../../..')
+        return os.path.realpath(os.path.join(scriptDir, '../../../Content/Development/'))
 
-    return os.path.join(MiscUtil.getExecDirectory(), '../..')
+    return os.path.realpath(os.path.join(MiscUtil.getExecDirectory(), '../..'))
 
 
 def _getExtraUserConfigPaths() -> List[str]:
@@ -127,6 +128,8 @@ def installBindings(mainConfigPath):
     # Put the standard config first so it can be over-ridden by user settings
     configPaths = [projenyConfigPath, mainConfigPath]
     configPaths += _getExtraUserConfigPaths()
+    print("ProjenyDirectory:" + projenyDir)
+    print(configPaths, ", ")
 
     Container.bind('Config').toSingle(Config, loadYamlFilesThatExist(*configPaths))
 

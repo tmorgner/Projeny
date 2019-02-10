@@ -1,3 +1,4 @@
+from typing import TypeVar, Generic
 
 import mtm.ioc.Container as Container
 import uuid
@@ -9,8 +10,10 @@ def NoAssertion(obj):
 Note that we use JIT dependency resolution here so that you can have
 circular dependencies
 '''
+T = TypeVar('T')
 
-class InjectBase:
+
+class InjectBase(Generic[T]):
     def __init__(self, identifier, assertion=NoAssertion):
         self._identifier = identifier
         self._assertion = assertion
@@ -25,24 +28,30 @@ class InjectBase:
 
         return value
 
-class Inject(InjectBase):
+    def _request(self) -> T:
+        raise NotImplementedError("Please Implement this method")
+
+
+class Inject(InjectBase[T]):
     def __init__(self, identifier, assertion=NoAssertion):
         InjectBase.__init__(self, identifier, assertion)
 
-    def _request(self):
+    def _request(self) -> T:
         obj = Container.resolve(self._identifier)
         self._assertion(obj)
         return obj
 
-class InjectMany(InjectBase):
+
+class InjectMany(InjectBase[T]):
     def __init__(self, identifier, assertion=NoAssertion):
         InjectBase.__init__(self, identifier, assertion)
 
-    def _request(self):
+    def _request(self) -> T:
         objects = Container.resolveMany(self._identifier)
         for obj in objects:
             self._assertion(obj)
         return objects
+
 
 class InjectOptional(InjectBase):
     def __init__(self, identifier, default, assertion=NoAssertion):

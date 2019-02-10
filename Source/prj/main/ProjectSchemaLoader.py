@@ -10,6 +10,7 @@ from mtm.config.Config import Config
 from mtm.config.YamlConfigLoader import loadYamlFilesThatExist
 from mtm.util.SystemHelper import SystemHelper
 from mtm.util.VarManager import VarManager
+from mtm.util.YamlSerializer import YamlData
 from prj.main.ProjectTarget import ProjectTarget
 from prj.main.AssemblyProjectInfo import AssemblyProjectInfo
 
@@ -56,8 +57,8 @@ class ProjectSchemaLoader:
         config.solutionFolders = yamlConfig.tryGetOrderedDictionary(OrderedDict(), 'SolutionFolders')
         config.packageFolders = yamlConfig.getList('PackageFolders')
         config.projectSettingsPath = yamlConfig.getString('ProjectSettingsPath')
-        config.unityPackagesPath = yamlConfig.getString('UnityPackagesPath')
-        config.targets = yamlConfig.tryGetOrderedDictionary(OrderedDict(), 'Targets')
+        config.unityPackagesPath = yamlConfig.tryGetString(None, 'UnityPackagesPath')
+        self._parseTargets(config, yamlConfig)
         config.upgradePlatforms()
 
         # Remove duplicates
@@ -70,6 +71,22 @@ class ProjectSchemaLoader:
                            packageName))
 
         return config
+
+    def _parseTargets(self, config: ProjectConfig, yamlConfig: Config):
+        target = yamlConfig.tryGetList([], 'Targets')
+        for t in target:
+            if 'Target' not in t:
+                continue
+
+            targetAttr = t['Target']
+            if 'Tag' in t:
+                tagAttr = t['Tag']
+            else:
+                tagAttr = None
+
+            result = ProjectTarget(targetAttr, tagAttr)
+            print(result.ToName())
+            config.targets.append(result)
 
     def _loadSchemaInternal(self, name: str, projectTarget: ProjectTarget) -> ProjectSchema:
 
