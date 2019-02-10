@@ -8,3 +8,4 @@ PathVars:
     UnityProjectsDir: '[ConfigDir]/UnityProjects'
     SharedUnityPackagesDir: '[ConfigDir]/UnityPackages'
     LogPath: '[ConfigDir]/PrjLog.txt'
+    MsBuildExePath: 'msbuild.exe'

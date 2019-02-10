@@ -1,12 +1,11 @@
 import sys
 import argparse
-
-from mtm.log.LogStreamFile import LogStreamFile
 import os
+
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
+from mtm.log.LogStreamFile import LogStreamFile
 from mtm.log.LogStreamConsole import LogStreamConsole
-from mtm.util.CommonSettings import ConfigFileName
 
 from mtm.util.Assert import *
 import prj.main.Prj as Prj
@@ -14,11 +13,13 @@ import prj.main.Prj as Prj
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
 ProjectRootDir = os.path.realpath(os.path.join(ScriptDir, '..'))
 BuildScriptDir = os.path.realpath(os.path.join(ProjectRootDir, 'BuildScripts'))
+BinDir = os.path.realpath(os.path.join(ProjectRootDir, 'Bin'))
 
 NsisPath = os.path.realpath(os.path.join(BuildScriptDir, 'nsis-3.04/makensis.exe'))
 
 
 class Runner:
+    _args: argparse.Namespace
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
     _log = Inject('Logger')
@@ -27,26 +28,24 @@ class Runner:
     _zipHelper = Inject('ZipHelper')
     _vsSolutionHelper = Inject('VisualStudioHelper')
 
-    def run(self, args):
-        self._args = args
+    def run(self, arg):
+        self._args = arg
         success = self._scriptRunner.runWrapper(self._runInternal)
 
         if not success:
             sys.exit(1)
 
     def _copyDir(self, relativePath):
-        self._sys.copyDirectory('[ProjenyDir]/' + relativePath, '[TempDir]/' + relativePath)
-
-    def _copyFile(self, relativePath):
-        self._sys.copyFile('[ProjenyDir]/' + relativePath, '[TempDir]/' + relativePath)
+        self._sys.copyDirectory('[ProjenyDir]/' + relativePath, '[BinDir]/Build')
 
     def _runInternal(self):
         self._varMgr.add('BuildScriptDir', BuildScriptDir)
         self._varMgr.add('ProjenyDir', ProjectRootDir)
+        self._varMgr.add('BinDir', BinDir)
         self._varMgr.add('SourceDir', '[ProjenyDir]/Source')
         self._varMgr.add('InstallerDir', '[ProjenyDir]/Installer')
-        self._varMgr.add('TempDir', '[InstallerDir]/Build/Temp')
-        self._varMgr.add('DistDir', '[InstallerDir]/Dist')
+        self._varMgr.add('TempDir', '[BinDir]/Temp')
+        self._varMgr.add('DistDir', '[BinDir]/Dist')
 
         self._sys.deleteAndReCreateDirectory('[DistDir]')
         self._sys.deleteAndReCreateDirectory('[TempDir]')
@@ -103,37 +102,31 @@ class Runner:
         with self._log.heading('Building unity plugin dlls'):
             self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', 'Release')
 
-            self._copyDir('UnityPlugin/Projeny/Assets')
-            self._copyDir('Templates')
-            self._copyFile(ConfigFileName)
-            self._copyDir('Bin')
-
-            for fileName in self._sys.getAllFilesInDirectory('[InstallerDir]/BinFiles'):
-                self._sys.copyFile('[InstallerDir]/BinFiles/' + fileName, '[TempDir]/Bin/' + fileName)
+            self._copyDir('Content/Shared')
+            self._copyDir('Content/Release')
 
             self._sys.removeByRegex('[TempDir]/Bin/UnityPlugin/Release/*.pdb')
             self._sys.deleteDirectoryIfExists('[TempDir]/Bin/UnityPlugin/Debug')
 
 
-def installBindings():
-
+def installBindings(arg: argparse.Namespace):
     Container.bind('LogStream').toSingle(LogStreamFile)
-    Container.bind('LogStream').toSingle(LogStreamConsole, True, False)
+    Container.bind('LogStream').toSingle(LogStreamConsole, True, arg.verbose)
 
-    demoConfig = os.path.realpath(os.path.join(ProjenyDir, 'Demo/Projeny.yaml'))
+    demoConfig = os.path.realpath(os.path.join(ProjectRootDir, 'Demo/Projeny.yaml'))
     Prj.installBindings(demoConfig)
 
 
 if __name__ == '__main__':
-    if (sys.version_info < (3, 0)):
+    if sys.version_info < (3, 0):
         print('Wrong version of python!  Install python 3 and try again')
         sys.exit(2)
 
     parser = argparse.ArgumentParser(description='Projeny build packager')
     parser.add_argument('-r', '--runInstallerAfter', action='store_true', help='')
     parser.add_argument('-t', '--addTag', action='store_true', help='')
+    parser.add_argument('-v', '--verbose', action='store_true', help='')
     args = parser.parse_args(sys.argv[1:])
 
-    installBindings()
+    installBindings(args)
     Runner().run(args)
-

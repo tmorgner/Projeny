@@ -75,7 +75,7 @@ class VisualStudioHelper:
         if self._config.getBool('Compilation', 'UseDevenv'):
             buildCommand = '"[VisualStudioCommandLinePath]" {0} /build "{1}"'.format(solutionPath, buildConfig)
         else:
-            buildCommand = '"[MsBuildExePath]" /p:VisualStudioVersion=12.0'
+            buildCommand = '"[MsBuildExePath]"'
             #if rebuild:
                 #buildCommand += ' /t:Rebuild'
             buildCommand += ' /p:Configuration="{0}" "{1}"'.format(buildConfig, solutionPath)

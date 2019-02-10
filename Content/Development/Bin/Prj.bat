@@ -10,7 +10,6 @@ if "%VIRTUAL_ENV%"=="" (
     set _ENV_CREATED = 0
 )
 
-
 set PYTHONPATH=%~dp0\..\..\..\Source;%PYTHONPATH%
 set errorlevel=
 python -m prj.main.Prj %*

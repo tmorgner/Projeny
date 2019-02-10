@@ -444,7 +444,7 @@ UnityPackagesPath: '{1}'
         with self._log.heading('Clearing generated files for project {0}'.format(projectName)):
             self._junctionHelper.removeJunctionsInDirectory('[UnityProjectsDir]/{0}'.format(projectName), True)
             for platform in Platforms.All:
-                self.setPathsForProjectPlatform(projectName, platform)
+                self.setPathsForProjectPlatform(projectName, ProjectTarget(platform))
 
                 if os.path.exists(self._varMgr.expandPath('[ProjectPlatformRoot]')):
                     platformRootPath = self._varMgr.expand('[ProjectPlatformRoot]')

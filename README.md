@@ -52,7 +52,7 @@ NOTE: Projeny requires Unity3D 5.3.1 or higher, since it makes use of the `-buil
         * <a href="#project-yaml">ProjenyProject.yaml reference</a>
         * <a href="#package-yaml">ProjenyPackage.yaml reference</a>
     * <a href="#custom-release-registries">Custom Release Sources</a>
-    * <a href="#command-line-reference">Command Line Reference</a>
+    * <a href="#command-line-reference">Command Line Reference</a>    
 * <a href="#appendix">Appendix</a>
     * <a href="#dllgotchas">A. "Gotchas" with using external assemblies:</a>
 * <a href="#release-notes">Release Notes</a>
@@ -70,12 +70,31 @@ You can either run Projeny directly from source (requires python) or simply down
 - From Source
 
     - Clone this repo to a place on your hard drive
-    - Make sure python 3.x is installed and that you have also installed the following:
-        - pyyaml (to install run `pip install pyyaml`)
-        - python for windows extensions (download [here](https://sourceforge.net/projects/pywin32/) for your version of python)
+    - Make sure python 3.6 is installed. cx_freeze, the tool to build .exe files from Python sources will not work with Python 3.7!
+        - Install the ``virtualenv`` tool:
+        
+                pip install virtualenv
+        
+        - create an virtual environment for this project.
+        
+                virtualenv venv
+               
+        - activate the virtual environment everytime you work with the project's sources. The virtual environment
+          contains all 3rd party libraries needed for the project. If you run Projeny directly from the
+          Python sources, the scripts will activate and deactivate this environment for you as needed.
+
+                source venv/bin/activate.ps1
+                
+        - fetch all required packages 
+        
+                pip install -r requirements.txt
+                
     - Open UnityPlugin/Projeny.sln in Visual Studio
-    - Build in Release Mode
-    - Add the Projeny/Source/bin folder to your windows path
+    - Build in Debug Mode
+    - Add the Projeny/Content/Development/bin folder to your windows path
+
+To build an installer from the sources, activate the ``virtualenv`` environment as described above
+and run ``BuildScripts\PackageBuild.bat``.
 
 ## <a id="overview"></a>Overview
 

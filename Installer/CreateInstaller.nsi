@@ -4,7 +4,7 @@
 
     !define APP_NAME "Projeny"
     !define INSTALLER_FILE_NAME "ProjenyInstaller"
-    !define BIN_FOLDER_PATH "Build"
+    !define BIN_FOLDER_PATH "../Bin/Build"
 
 ;--------------------------------
 ;Includes
@@ -16,7 +16,7 @@
 
   ;Name and file
   Name "${APP_NAME}"
-  OutFile "Dist/${INSTALLER_FILE_NAME}.exe"
+  OutFile "../Bin/Dist/${INSTALLER_FILE_NAME}.exe"
 
   ;Default installation folder
   InstallDir "$PROGRAMFILES32\${APP_NAME}"

@@ -1,3 +1,4 @@
+from distutils.dir_util import copy_tree
 
 from mtm.log.Logger import Logger
 from mtm.util.VarManager import VarManager
@@ -270,7 +271,7 @@ class SystemHelper:
 
         self._log.debug("Copying directory '{0}' to '{1}'".format(fromPath, toPath))
 
-        shutil.copytree(fromPath, toPath)
+        copy_tree(fromPath, toPath)
         for root, dirs, files in os.walk(toPath):
             for file in files:
                 os.chmod(os.path.join(root, file), stat.S_IWRITE)

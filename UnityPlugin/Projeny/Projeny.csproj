@@ -22,9 +22,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Unity Debug' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Bin\Build\UnityPlugin\Debug\</OutputPath>
-    <IntermediateOutputPath>..\..\Temp\obj\Debug\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>..\..\Temp\obj\Debug\</BaseIntermediateOutputPath>
+    <OutputPath>..\..\Bin\Build\Bin\UnityPlugin\Debug\</OutputPath>
+    <IntermediateOutputPath>obj\Debug\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\Debug\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -34,9 +34,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Unity Release' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\Bin\Build\UnityPlugin\Release\</OutputPath>
-    <IntermediateOutputPath>..\..\Temp\obj\Release\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>..\..\Temp\obj\Release\</BaseIntermediateOutputPath>
+    <OutputPath>..\..\Bin\Build\Bin\UnityPlugin\Release\</OutputPath>
+    <IntermediateOutputPath>obj\Release\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\Release\</BaseIntermediateOutputPath>
     <DefineConstants>
     </DefineConstants>
     <DebugType>full</DebugType>

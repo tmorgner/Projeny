@@ -3,7 +3,7 @@ import shutil
 from cx_Freeze import setup, Executable
 
 ScriptDir = os.path.dirname(os.path.realpath(__file__))
-BuildDir = os.path.join(ScriptDir, '../Bin/Build/')
+BuildDir = os.path.join(ScriptDir, '../Bin/Build/Bin')
 BuildPlatformDir = os.path.join(BuildDir, 'Data')
 
 print("Removing previous build directories...")
