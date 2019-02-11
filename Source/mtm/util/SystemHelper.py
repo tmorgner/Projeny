@@ -149,6 +149,7 @@ class SystemHelper:
 
     def makeMissingDirectoriesInPath(self, dirPath):
         dirPath = self._varManager.expand(dirPath)
+        self._log.debug("Making missing directories in path '{0}'".format(dirPath))
         try:
             os.makedirs(os.path.dirname(dirPath))
         except:
@@ -368,11 +369,3 @@ class SystemHelper:
             count += 1
 
         self._log.debug("Removed %s files matching '%s'" % (count, regex))
-
-    def makeMissingDirectoriesInPath(self, dirPath):
-        dirPath = self._varManager.expand(dirPath)
-        self._log.debug("Making missing directories in path '{0}'".format(dirPath))
-        try:
-            os.makedirs(os.path.dirname(dirPath))
-        except:
-            pass
