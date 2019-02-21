@@ -36,7 +36,7 @@ class JunctionHelper:
         actualPath = self._varMgr.expandPath(actualPath)
         linkPath = self._varMgr.expandPath(linkPath)
 
-        assertThat(self._sys.directoryExists(actualPath))
+        assertThat(self._sys.directoryExists(actualPath), "Directory does not exist " + str(actualPath))
 
         self._sys.makeMissingDirectoriesInPath(linkPath)
 

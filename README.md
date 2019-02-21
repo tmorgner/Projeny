@@ -83,7 +83,7 @@ You can either run Projeny directly from source (requires python) or simply down
           contains all 3rd party libraries needed for the project. If you run Projeny directly from the
           Python sources, the scripts will activate and deactivate this environment for you as needed.
 
-                source venv/bin/activate.ps1
+                ./venv/Scripts/activate.ps1
                 
         - fetch all required packages 
         
