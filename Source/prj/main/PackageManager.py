@@ -219,6 +219,7 @@ UnityPackagesPath: '{1}'
         for packageFolder in projConfig.packageFolders:
             folderInfo = PackageFolderInfo()
             folderInfo.path = packageFolder
+            folderInfo.projectDirectory = False
 
             if self._sys.directoryExists(packageFolder):
                 for packageName in self._sys.walkDir(packageFolder):
@@ -231,6 +232,7 @@ UnityPackagesPath: '{1}'
 
                     packageInfo = PackageInfo()
                     packageInfo.name = packageName
+                    packageInfo.path = packageDirPath
 
                     if self._sys.fileExists(installInfoFilePath):
                         installInfo = YamlSerializer.deserialize(self._sys.readFileAsText(installInfoFilePath))
@@ -240,6 +242,31 @@ UnityPackagesPath: '{1}'
 
             folderInfos.append(folderInfo)
 
+        for packageFolder in projConfig.packageProjectFolders:
+            folderInfo = PackageFolderInfo()
+            folderInfo.path = packageFolder
+            folderInfo.projectDirectory = True
+
+            if self._sys.directoryExists(packageFolder):
+                for packageName in self._sys.walkDir(packageFolder):
+                    packageDirPath = os.path.join(packageFolder, packageName, "Assets", "Plugins", packageName)
+
+                    if not self._sys.IsDir(packageDirPath):
+                        continue
+
+                    installInfoFilePath = os.path.join(packageDirPath, InstallInfoFileName)
+
+                    packageInfo = PackageInfo()
+                    packageInfo.name = packageName
+                    packageInfo.path = packageDirPath
+
+                    if self._sys.fileExists(installInfoFilePath):
+                        installInfo = YamlSerializer.deserialize(self._sys.readFileAsText(installInfoFilePath))
+                        packageInfo.installInfo = installInfo
+
+                    folderInfo.packages.append(packageInfo)
+
+            folderInfos.append(folderInfo)
         return folderInfos
 
     def deleteProject(self, projName: str):
@@ -266,6 +293,14 @@ UnityPackagesPath: '{1}'
 
             for name in self._sys.walkDir(packageFolder):
                 if self._sys.IsDir(os.path.join(packageFolder, name)):
+                    results.append(name)
+
+        for packageFolder in projConfig.packageProjectFolders:
+            if not self._sys.directoryExists(packageFolder):
+                continue
+
+            for name in self._sys.walkDir(packageFolder):
+                if self._sys.IsDir(os.path.join(packageFolder, name, "Assets", "Plugins", name)):
                     results.append(name)
 
         return results

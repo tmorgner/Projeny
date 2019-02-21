@@ -41,11 +41,9 @@ from prj.main.PrjRunner import PrjRunner
 
 from mtm.util.Assert import *
 
-from mtm.util.PlatformUtil import Platforms
 from prj.main.PackageManager import PackageManager
 
 import mtm.ioc.Container as Container
-from mtm.ioc.Inject import Inject
 
 from mtm.util.UnityHelper import UnityHelper
 
@@ -264,6 +262,13 @@ PackageFolders:
     # Each project can optionally have packages placed in a folder named packages
     # Note that you can directly add to this folder using the package manager gui from within Unity
     - '[ProjectRoot]/Packages'
+    
+PackageProjectFolders:
+    # Put packages that organised as UnityProjects here. The directory should contain Unity projects.
+    # The projects must follow a prescribed structure: For a module "SampleModule", there should be
+    # an project "SampleModule" with a plugin "SampleModule" in the "Assets/Plugins" folder. 
+    #
+    # Projeny will link to this module only. 
 """)
 
 
@@ -303,7 +308,7 @@ def _main():
 
 if __name__ == '__main__':
 
-    if (sys.version_info < (3, 0)):
+    if sys.version_info < (3, 0):
         print('Wrong version of python!  Install python 3 and try again')
         sys.exit(2)
 

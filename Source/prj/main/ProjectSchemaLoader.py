@@ -56,6 +56,7 @@ class ProjectSchemaLoader:
         config.targetPlatforms = yamlConfig.tryGetList([Platforms.Windows], 'TargetPlatforms')
         config.solutionFolders = yamlConfig.tryGetOrderedDictionary(OrderedDict(), 'SolutionFolders')
         config.packageFolders = yamlConfig.getList('PackageFolders')
+        config.packageProjectFolders = yamlConfig.getList('PackageProjectFolders')
         config.projectSettingsPath = yamlConfig.getString('ProjectSettingsPath')
         config.unityPackagesPath = yamlConfig.tryGetString(None, 'UnityPackagesPath')
         self._parseTargets(config, yamlConfig)
@@ -199,6 +200,13 @@ class ProjectSchemaLoader:
                     packageDir = self._varMgr.expandPath(candidatePackageDir)
                     break
 
+            for packageFolder in projectConfig.packageProjectFolders:
+                candidatePackageDir = os.path.join(packageFolder, packageName,"Assets", "Plugins", packageName)
+
+                if self._sys.directoryExists(candidatePackageDir):
+                    packageDir = self._varMgr.expandPath(candidatePackageDir)
+                    break
+
             assertIsNotNone(packageDir,
                             "Could not find package '{0}' in any of the package directories!  Referenced in {1}",
                             packageName, packageRef.sourceDesc)
@@ -265,8 +273,8 @@ class ProjectSchemaLoader:
 
         projFullPath = self._varMgr.expand(assemblyProjectRelativePath)
 
-        if not os.path.isabs(projFullPath):
-            projFullPath = os.path.join(packageDir, assemblyProjectRelativePath)
+        # if not os.path.isabs(projFullPath):
+        #     projFullPath = os.path.join(packageDir, assemblyProjectRelativePath)
 
         assertThat(self._sys.fileExists(projFullPath), "Expected to find file at '{0}'.", projFullPath)
 
