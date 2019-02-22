@@ -56,7 +56,7 @@ class ProjectSchemaLoader:
         config.targetPlatforms = yamlConfig.tryGetList([Platforms.Windows], 'TargetPlatforms')
         config.solutionFolders = yamlConfig.tryGetOrderedDictionary(OrderedDict(), 'SolutionFolders')
         config.packageFolders = yamlConfig.getList('PackageFolders')
-        config.packageProjectFolders = yamlConfig.getList('PackageProjectFolders')
+        config.packageProjectFolders = yamlConfig.tryGetList([], 'PackageProjectFolders')
         config.projectSettingsPath = yamlConfig.getString('ProjectSettingsPath')
         config.unityPackagesPath = yamlConfig.tryGetString(None, 'UnityPackagesPath')
         self._parseTargets(config, yamlConfig)
