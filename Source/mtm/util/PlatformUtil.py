@@ -12,14 +12,17 @@ def toPlatformTargetFolderName(projectTarget: ProjectTarget):
         return projectTarget.target + "-" + projectTarget.tag
 
 
-def fromPlatformFolderName(platformDirName: str):
+def fromPlatformFolderName(platformDirName: str) -> str:
     platformDirName = platformDirName.lower()
+    parts = platformDirName.split('-')
+    maybePlatform = parts[0]
 
+    platform = None
     for curPlatform in Platforms.All:
-        if curPlatform.lower() == platformDirName:
-            return curPlatform
+        if curPlatform.lower() == maybePlatform:
+            platform = curPlatform
 
-    assertThat(False)
+    assertThat(False, "Invalid platform: " + str(platformDirName))
 
 
 def fromPlatformArgName(platformArgStr: str):

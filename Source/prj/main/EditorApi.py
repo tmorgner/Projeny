@@ -1,5 +1,4 @@
 
-import os
 import traceback
 from mtm.log.LogStreamFile import LogStreamFile
 import prj.main.Prj as Prj
@@ -8,13 +7,13 @@ import mtm.util.YamlSerializer as YamlSerializer
 from mtm.log.LogStreamConsoleHeadingsOnly import LogStreamConsoleHeadingsOnly
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-import mtm.ioc.IocAssertions as Assertions
 import sys
 import mtm.util.MiscUtil as MiscUtil
 
 from mtm.util.Platforms import Platforms
-import mtm.util.PlatformUtil as PlatformUtil
 from mtm.util.Assert import *
+from prj.main.ProjectSchemaLoader import ProjectSchemaLoader
+from prj.main.ProjectTarget import ProjectTarget
 
 
 class Runner:
@@ -25,18 +24,30 @@ class Runner:
     _releaseSourceManager = Inject('ReleaseSourceManager')
     _sys = Inject('SystemHelper')
     _varMgr = Inject('VarManager')
+    _schemaLoader: ProjectSchemaLoader = Inject('ProjectSchemaLoader')
 
-    def run(self, project, platform, requestId, param1, param2, param3):
+    _project: str
+    _platform: ProjectTarget
+    _requestId: str
+    _param1: str
+    _param2: str
+    _param3: str
+
+    def parsePlatform(self, project: str, platformRaw: str):
+        config = self._schemaLoader.loadProjectConfig(project)
+        return config.parseProjectTarget(platformRaw)
+
+    def run(self, project: str, platformRaw: str, requestId: str, param1: str, param2: str, param3: str):
         self._log.debug("Started EditorApi with arguments: {0}".format(" ".join(sys.argv[1:])))
 
         self._project = project
-        self._platform = platform
+        self._platform = self.parsePlatform(project, platformRaw)
         self._requestId = requestId
         self._param1 = param1
         self._param2 = param2
         self._param3 = param3
 
-        succeeded = True
+        succeededLocal = True
 
         # This is repeated in __main__ but this is better because
         # it will properly log detailed errors to the file log instead of to the console
@@ -49,9 +60,9 @@ class Runner:
             if not MiscUtil.isRunningAsExe():
                 self._log.error('\n' + traceback.format_exc())
 
-            succeeded = False
+            succeededLocal = False
 
-        if not succeeded:
+        if not succeededLocal:
             sys.exit(1)
 
     def _outputAllPathVars(self):
@@ -142,10 +153,11 @@ def main():
     installBindings(args.configPath)
     Prj.installPlugins()
 
-    Runner().run(args.project, PlatformUtil.fromPlatformFolderName(args.platform), args.requestId, args.param1, args.param2, args.param3)
+    Runner().run(args.project, args.platform, args.requestId, args.param1, args.param2, args.param3)
+
 
 if __name__ == '__main__':
-    if (sys.version_info < (3, 0)):
+    if sys.version_info < (3, 0):
         sys.stderr.write('Wrong version of python!  Install python 3 and try again')
         sys.exit(2)
 

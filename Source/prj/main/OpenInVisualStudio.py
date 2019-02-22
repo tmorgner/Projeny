@@ -1,4 +1,5 @@
-from typing import Any
+import traceback
+from typing import Any, Tuple
 
 import prj.main.Prj as Prj
 
@@ -6,15 +7,14 @@ import mtm.util.MiscUtil as MiscUtil
 import os
 import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-import mtm.ioc.IocAssertions as Assertions
 import sys
 import argparse
 
 from mtm.log.LogStreamConsole import LogStreamConsole
 
-from mtm.util.Platforms import Platforms
-import mtm.util.PlatformUtil as PlatformUtil
 from mtm.util.Assert import *
+from prj.main.ProjectSchemaLoader import ProjectSchemaLoader
+from prj.main.ProjectTarget import ProjectTarget
 
 
 class Runner:
@@ -24,6 +24,8 @@ class Runner:
     _varMgr = Inject('VarManager')
     _vsSolutionHelper = Inject('VisualStudioHelper')
     _prjVsSolutionHelper = Inject('ProjenyVisualStudioHelper')
+    _config = Inject('Config')
+    _schemaLoader: ProjectSchemaLoader = Inject('ProjectSchemaLoader')
     _args: Any
 
     def run(self, args):
@@ -44,7 +46,7 @@ class Runner:
         if self._args.lineNo:
             lineNo = int(self._args.lineNo)
 
-        if platform == None:
+        if platform is None:
             solutionPath = None
         else:
             solutionPath = self._prjVsSolutionHelper.getCustomSolutionPath(project, platform)
@@ -52,7 +54,7 @@ class Runner:
         self._vsSolutionHelper.openFile(
             self._args.filePath, lineNo, solutionPath)
 
-    def _getProjectAndPlatformFromFilePath(self, filePath):
+    def _getProjectAndPlatformFromFilePath(self, filePath) -> Tuple[str, ProjectTarget]:
         unityProjectsDir = self._sys.canonicalizePath(self._varMgr.expand('[UnityProjectsDir]'))
         filePath = self._sys.canonicalizePath(filePath)
 
@@ -64,11 +66,14 @@ class Runner:
 
         projectName = dirs[0]
 
+        projectConfig = self._schemaLoader.loadProjectConfig(projectName)
+
+        # We know that the project directories are named after '{project-name}-{platform}[-{tag}]'
+        # So by stripping the project-name from the platformProjectDirName, we get the platform
+        # and tag in the format of '{platform}-{tag}'
         try:
             platformProjectDirName = dirs[1]
-            platformDirName = platformProjectDirName[platformProjectDirName.rfind('-')+1:]
-
-            platform = PlatformUtil.fromPlatformFolderName(platformDirName)
+            platform = projectConfig.parseProjectTargetFromDirectoryName(projectName, platformProjectDirName)
         except:
             platform = None
 

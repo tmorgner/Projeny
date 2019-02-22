@@ -1,4 +1,7 @@
-from typing import List
+from typing import List, Optional
+
+from mtm.util.Assert import assertThat
+from mtm.util.Platforms import Platforms
 from prj.main.ProjectTarget import ProjectTarget
 
 
@@ -33,3 +36,20 @@ class ProjectConfig:
 
         self.targets = cleanTargets
 
+    def parseProjectTargetFromDirectoryName(self, projectName: str, platformProjectDirName: str):
+        platformAndTag = platformProjectDirName[len(projectName) + 1:]
+        return self.parseProjectTarget(platformAndTag)
+
+    def parseProjectTarget(self, platformAndTag: str):
+        platform = self._findInTargets(platformAndTag)
+        if platform is None:
+            assertThat(False, "Invalid platform: " + str(platformAndTag))
+
+        return platform
+
+    def _findInTargets(self, platformAndTag: str) -> Optional[ProjectTarget]:
+        for t in self.targets:
+            if t.ToPath().lower() == platformAndTag.lower():
+                return t
+
+        return None
