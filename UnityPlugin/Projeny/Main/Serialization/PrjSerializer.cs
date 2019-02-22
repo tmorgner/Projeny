@@ -361,10 +361,24 @@ namespace Projeny.Internal
                 get;
                 set;
             }
+
+            public string ProjectDirectory
+            {
+                get;
+                set;
+            }
+
         }
 
         class PackageInfoInternal
         {
+            public string Path
+            {
+                get;
+                set;
+            }
+
+
             public string Name
             {
                 get;
