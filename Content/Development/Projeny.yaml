@@ -32,6 +32,7 @@ PathVars:
     # Note that these are defaults, and can be overridden in any other Projeny.yaml file
     MsBuildExePath: 'msbuild.exe'
     UnityExePath: 'C:/Program Files/Unity/Editor/Unity.exe'
+    UnityHubPath: 'C:/Program Files/Unity/Hub/Editor/'
 
 Console:
     UseColors: False
