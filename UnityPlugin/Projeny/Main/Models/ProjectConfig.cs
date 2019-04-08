@@ -13,6 +13,7 @@ namespace Projeny
         public List<string> Prebuilt = new List<string>();
         public List<KeyValuePair<string, string>> SolutionFolders = new List<KeyValuePair<string, string>>();
         public List<string> ProjectPlatforms = new List<string>();
+        public List<ProjectTarget> ProjectTargets = new List<ProjectTarget>();
     }
 }
 

@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Projeny", "Projeny\Projeny.csproj", "{A8FDE485-31E0-4B40-8E7B-476E82374944}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YamlDotNet", "YamlDotNet\YamlDotNet.csproj", "{463BDB34-890F-4375-A79F-37950F5457DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Projeny.Test", "Projeny.Test\Projeny.Test.csproj", "{36691DCC-48C9-4883-818D-3EB5E27F6C57}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,8 +23,15 @@ Global
 		{463BDB34-890F-4375-A79F-37950F5457DC}.Debug|Any CPU.Build.0 = Unity Debug|Any CPU
 		{463BDB34-890F-4375-A79F-37950F5457DC}.Release|Any CPU.ActiveCfg = Unity Release|Any CPU
 		{463BDB34-890F-4375-A79F-37950F5457DC}.Release|Any CPU.Build.0 = Unity Release|Any CPU
+		{36691DCC-48C9-4883-818D-3EB5E27F6C57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36691DCC-48C9-4883-818D-3EB5E27F6C57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36691DCC-48C9-4883-818D-3EB5E27F6C57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36691DCC-48C9-4883-818D-3EB5E27F6C57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8EC04566-8DA7-483F-8DD7-78DE50FF86C4}
 	EndGlobalSection
 EndGlobal

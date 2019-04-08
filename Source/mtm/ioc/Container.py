@@ -69,10 +69,15 @@ class Binder:
             # Assume its an instance
             assertThat(not type(provider) in _singletons)
             _singletons[type(provider)] = provider
+
             def call():
                 return provider
 
         self._toProvider(call)
+
+        if self.identifier is not "LogStream":
+            if len(_providers[self.identifier]) > 1:
+                triggerAssert("Multiple providers registered for " + self.identifier)
 
     def _toProvider(self, provider):
         if not self.identifier in _providers:

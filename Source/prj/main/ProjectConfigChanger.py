@@ -52,10 +52,10 @@ class ProjectConfigChanger:
 
             config.targets.append(ProjectTarget(targetAttr, tagAttr))
 
-    def saveProjectConfig(self, projectName: str, projectConfig):
+    def saveProjectConfig(self, projectName: str, projectConfig: ProjectConfig):
         configPath = self._getProjectConfigPath(projectName)
         text = YamlSerializer.serialize(projectConfig)
-        print(text)
+        self._log.info(text)
         self._sys.writeFileAsText(configPath, text)
 
     def addPackage(self, projectName: str, packageName: str, addToAssetsFolder: bool):

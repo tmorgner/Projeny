@@ -26,7 +26,7 @@ namespace Projeny.Internal
         {
             var info = ProjenyEditorUtil.GetCurrentProjectInfo();
 
-            var expectedPlatform = ProjenyEditorUtil.FromPlatformDirStr(info.PlatformDirName);
+            var expectedPlatform = ProjenyEditorUtil.ParseBuildTarget(info.ProjectTarget.Target);
             var currentPlatform = EditorUserBuildSettings.activeBuildTarget;
 
             if ((expectedPlatform == BuildTarget.StandaloneWindows || expectedPlatform == BuildTarget.StandaloneWindows64)
@@ -58,7 +58,9 @@ namespace Projeny.Internal
             {
                 var scriptNameLowered = scriptDir.Name.ToLower();
 
-                if (scriptNameLowered == "editor default resources" || scriptNameLowered == "gizmos" || scriptNameLowered == "streamingassets")
+                if (scriptNameLowered == "editor default resources" || 
+                    scriptNameLowered == "gizmos" || 
+                    scriptNameLowered == "streamingassets")
                 {
                     // TODO: Verify subdirectories here
                     continue;
@@ -70,12 +72,14 @@ namespace Projeny.Internal
                     {
                         var pluginNameLowered = pluginDir.Name.ToLower();
 
-                        if (pluginNameLowered == "projeny" || pluginNameLowered == "projenygenerated")
+                        if (pluginNameLowered == "projeny" || 
+                            pluginNameLowered == "projenygenerated")
                         {
                             continue;
                         }
 
-                        if (pluginNameLowered == "android" || pluginNameLowered == "webgl")
+                        if (pluginNameLowered == "android" || 
+                            pluginNameLowered == "webgl")
                         {
                             foreach (var platformDir in pluginDir.GetDirectories())
                             {

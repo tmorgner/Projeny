@@ -30,7 +30,7 @@ namespace Projeny
 """)
 
     _changeProjectMethodTemplate = Template("""
-        [MenuItem("Projeny/Change Project/$name-$platform", false, 8)]
+        [MenuItem("Projeny/Change Project/$name/$platform", false, 8)]
         public static void ChangeProject$index()
         {
             PrjHelper.ChangeProject("$name", "$platform");
@@ -59,7 +59,7 @@ namespace Projeny
                 continue
 
             for target in projConfig.targets:
-                platform = target.ToName()
+                platform = target.ToPath()
                 methodsText += self._changeProjectMethodTemplate.substitute(name=projName, platform=platform, index=projIndex)
 
                 if projName == currentProjName and target == currentPlatform:

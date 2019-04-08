@@ -14,5 +14,11 @@ project_root_marker
 *.csproj.user
 *.suo
 
+
 **/.vs/
 **/.vscode/
+UnityPlugin/packages/*
+UnityPlugin/packages/*
+UnityPlugin/Projeny.Test/obj/
+UnityPlugin/Projeny.Test/bin/
+

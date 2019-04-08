@@ -59,15 +59,20 @@ namespace Projeny
             return true;
         }
 
-        public static void ChangeProject(string projectName, string platformName = "windows")
+        /// <summary>
+        ///  Called by the Projeny generated code created by UnityEditorMenuGenerator.py. 
+        /// </summary>
+        /// <param name="projectName"></param>
+        /// <param name="platformAndTag"></param>
+        public static void ChangeProject(string projectName, string platformAndTag = "windows")
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
                 // They hit cancel in the save dialog
                 return;
             }
-            var platform = ProjenyEditorUtil.FromPlatformDirStr(platformName);
 
+            var platform = ProjenyEditorUtil.ParseProjectTarget(platformAndTag);
             var result = PrjInterface.RunPrj(PrjInterface.CreatePrjRequestForProjectAndPlatform("updateLinks", projectName, platform));
 
             if (result.Succeeded)
@@ -87,7 +92,7 @@ namespace Projeny
                     .Fmt(projectName), result.ErrorMessage);
             }
         }
-
+        /*
         public static void ChangePlatform(BuildTarget desiredPlatform)
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -120,6 +125,7 @@ namespace Projeny
                     .Fmt(desiredPlatform.ToString()), result.ErrorMessage);
             }
         }
+        */
 
         public static void DisplayPrjError(string operationDescription, string errors)
         {

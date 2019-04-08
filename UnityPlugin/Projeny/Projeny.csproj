@@ -88,6 +88,7 @@
     <Compile Include="Internal\TypeExtensions.cs" />
     <Compile Include="Main\Models\PackageInfo.cs" />
     <Compile Include="Main\Models\ProjectConfig.cs" />
+    <Compile Include="Main\Models\ProjectTarget.cs" />
     <Compile Include="Main\Models\ReleaseInfo.cs" />
     <Compile Include="Main\PrjHelper.cs" />
     <Compile Include="Main\PrjInterface.cs" />

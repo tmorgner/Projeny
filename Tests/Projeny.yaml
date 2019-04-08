@@ -24,8 +24,8 @@ PathVars:
     ProjectRootGitIgnoreTemplate: '[ProjTemplatesDir]/customProjectRootGitIgnore'
     ProjectRootSvnIgnoreTemplate: '[ProjTemplatesDir]/customProjectRootSvnIgnore'
 
-    YamlDotNetDllPath: '[ProjenyDir]/../../Bin/Build/Bin/UnityPlugin/Debug/YamlDotNet.dll'
-    ProjenyUnityEditorDllPath: '[ProjenyDir]/../../Bin/Build/Bin/UnityPlugin/Debug/Projeny.dll'
+    YamlDotNetDllPath: '[ProjenyDir]/../../Bin/Build/Bin/UnityPlugin/Release/YamlDotNet.dll'
+    ProjenyUnityEditorDllPath: '[ProjenyDir]/../../Bin/Build/Bin/UnityPlugin/Release/Projeny.dll'
     ProjenyUnityEditorDllMetaFilePath: '[ProjTemplatesDir]/Projeny.dll.meta'
     ProjenyUnityEditorAssetsDirPath: '[ProjTemplatesDir]/../UnityPlugin/Projeny/Assets'
 

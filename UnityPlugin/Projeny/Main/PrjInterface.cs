@@ -44,7 +44,7 @@ namespace Projeny
     {
         public string RequestId;
         public string ProjectName;
-        public BuildTarget Platform;
+        public ProjectTarget Platform;
         public string ConfigPath;
         public string Param1;
         public string Param2;
@@ -132,7 +132,7 @@ namespace Projeny
             return CreatePrjRequestForProjectAndPlatform(
                 requestId,
                 ProjenyEditorUtil.GetCurrentProjectName(),
-                ProjenyEditorUtil.GetPlatformFromDirectoryName());
+                ProjenyEditorUtil.GetCurrentPlatformDirName());
         }
 
         public static PrjRequest CreatePrjRequestForProject(
@@ -141,11 +141,11 @@ namespace Projeny
             return CreatePrjRequestForProjectAndPlatform(
                 requestId,
                 project,
-                ProjenyEditorUtil.GetPlatformFromDirectoryName());
+                ProjenyEditorUtil.GetCurrentPlatformDirName());
         }
 
         public static PrjRequest CreatePrjRequestForPlatform(
-            string requestId, BuildTarget platform)
+            string requestId, ProjectTarget platform)
         {
             return CreatePrjRequestForProjectAndPlatform(
                 requestId,
@@ -154,7 +154,7 @@ namespace Projeny
         }
 
         public static PrjRequest CreatePrjRequestForProjectAndPlatform(
-            string requestId, string projectName, BuildTarget platform)
+            string requestId, string projectName, ProjectTarget platform)
         {
             return new PrjRequest()
             {
@@ -174,7 +174,7 @@ namespace Projeny
             var argStr = "\"{0}\" \"{1}\" {2} {3}"
                 .Fmt(
                     request.ConfigPath, request.ProjectName,
-                    ToPlatformDirStr(request.Platform), request.RequestId);
+                    request.Platform.ToArgument(), request.RequestId);
 
             if (request.Param1 != null)
             {
@@ -282,46 +282,6 @@ namespace Projeny
             }
 
             return PrjResponse.Success(errorOutput);
-        }
-
-        static string ToPlatformDirStr(BuildTarget platform)
-        {
-            switch (platform)
-            {
-                case BuildTarget.StandaloneWindows64:
-                case BuildTarget.StandaloneWindows:
-                {
-                    return "windows";
-                }
-                case BuildTarget.Android:
-                {
-                    return "android";
-                }
-                case BuildTarget.WebGL:
-                {
-                    return "webgl";
-                }
-                case BuildTarget.StandaloneOSXUniversal:
-                {
-                    return "osx";
-                }
-                case BuildTarget.iOS:
-                {
-                    return "ios";
-                }
-                case BuildTarget.StandaloneLinux:
-                {
-                    return "linux";
-                }
-                case BuildTarget.WSAPlayer:
-                {
-                    return "uwp";
-                }
-            }
-            if (platform.ToString() == "Lumin")
-                return "lumin";
-
-            throw new NotImplementedException();
         }
 
         public class PrjException : Exception

@@ -131,10 +131,12 @@ class Runner:
         else:
             assertThat(False, "Invalid request id '{0}'", self._requestId)
 
+
 def installBindings(configPath):
     Container.bind('LogStream').toSingle(LogStreamConsoleHeadingsOnly)
     Container.bind('LogStream').toSingle(LogStreamFile)
     Prj.installBindings(configPath)
+
 
 def main():
     import argparse

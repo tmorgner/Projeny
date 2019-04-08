@@ -35,9 +35,9 @@ namespace Projeny
             return GetCurrentProjectInfo().ProjectName;
         }
 
-        public static string GetCurrentPlatformDirName()
+        public static ProjectTarget GetCurrentPlatformDirName()
         {
-            return GetCurrentProjectInfo().PlatformDirName;
+            return GetCurrentProjectInfo().ProjectTarget;
         }
 
         public static string GetProjectConfigPath(ProjectConfigTypes configType)
@@ -97,19 +97,47 @@ namespace Projeny
             info.ProjectName = Path.GetFileName(projectRootPath);
 
             var projectAndPlatform = Path.GetFileName(projectPlatformRootPath);
-
-            info.PlatformDirName = projectAndPlatform.Substring(projectAndPlatform.LastIndexOf("-")+1);
+            if (projectAndPlatform.StartsWith(info.ProjectName))
+            {
+                var platformAndTarget = projectAndPlatform.Substring(info.ProjectName.Length + 1);
+                info.ProjectTarget = ParseProjectTarget(platformAndTarget);
+            }
+            else
+            {
+                UnityEngine.Debug.LogError("Unexpected project structure. Project sub directories should start with the project name as prefix.");
+                info.ProjectTarget = new ProjectTarget()
+                {
+                    Target = projectAndPlatform.Substring(projectAndPlatform.LastIndexOf("-") + 1),
+                    Tag = null
+                };
+            }
 
             return info;
         }
 
-        public static BuildTarget GetPlatformFromDirectoryName()
+        public static ProjectTarget ParseProjectTarget(string platformAndTarget)
         {
-            return FromPlatformDirStr(GetCurrentPlatformDirName());
+            var platformAndTargetSplit = platformAndTarget.IndexOf('-');
+            if (platformAndTargetSplit < 0)
+            {
+                return new ProjectTarget()
+                {
+                    Tag = null,
+                    Target = platformAndTarget
+                };
+            }
+            else
+            {
+                return new ProjectTarget()
+                {
+                    Tag = platformAndTarget.Substring(platformAndTargetSplit + 1),
+                    Target = platformAndTarget.Substring(0, platformAndTargetSplit)
+                };
+            }
         }
 
         // NOTE: This needs to stay in sync with BuildUtil.py
-        public static BuildTarget FromPlatformDirStr(string platformShortStr)
+        public static BuildTarget ParseBuildTarget(string platformShortStr)
         {
             switch (platformShortStr.ToLower())
             {
@@ -159,7 +187,7 @@ namespace Projeny
 
         public class ProjectInfo
         {
-            public string PlatformDirName;
+            public ProjectTarget ProjectTarget;
             public string ProjectName;
         }
     }

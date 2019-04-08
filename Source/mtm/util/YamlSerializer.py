@@ -2,6 +2,7 @@ import yaml
 import inspect
 from datetime import datetime
 
+
 class YamlData:
     def __init__(self, data):
         self.__dict__.update(data)
@@ -9,12 +10,15 @@ class YamlData:
     def __str__(self):
         return str(self.__dict__)
 
+
 def serialize(obj):
     # width is necessary otherwise it can insert newlines into string values
     return yaml.dump(_serializeObj(obj), width=9999999, default_flow_style=False)
 
+
 def deserialize(yamlStr):
     return _deserializeObj(yaml.load(yamlStr))
+
 
 def _deserializeObj(data):
     dataType = type(data)
@@ -35,10 +39,10 @@ def _deserializeObj(data):
 
     return data
 
+
 # This is necessary because otherwise yaml inserts python specific type information
 def _serializeObj(obj):
-
-    if obj == None:
+    if obj is None:
         return None
 
     objType = type(obj)
@@ -66,9 +70,8 @@ def _serializeObj(obj):
 
             result = _serializeObj(value)
 
-            if result != None:
+            if result is not None:
                 # Our convention with YAML is PascalCase
                 obj[key[0].upper() + key[1:]] = result
 
     return obj
-

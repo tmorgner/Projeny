@@ -24,16 +24,17 @@ class ProjectConfig:
         # This version supports a new project definition format that allows multiple projects
         # for each platform. This enables to have a different build settings for each project
         # including different plugin configurations.
-        if len(self.targets) == 0:
-            for platform in self.targetPlatforms:
-                target_def = ProjectTarget(platform)
-                self.targets.append(target_def)
+        for platform in self.targetPlatforms:
+            target_def = ProjectTarget(platform)
+            self.targets.append(target_def)
 
         cleanTargets = []
         for t in self.targets:
             target = ProjectTarget(t.target, t.tag)
-            cleanTargets.append(target)
+            if target not in cleanTargets:
+                cleanTargets.append(target)
 
+        self.targetPlatforms = []
         self.targets = cleanTargets
 
     def parseProjectTargetFromDirectoryName(self, projectName: str, platformProjectDirName: str):

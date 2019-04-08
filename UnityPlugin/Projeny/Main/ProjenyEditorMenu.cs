@@ -79,6 +79,7 @@ namespace Projeny
             }
         }
 
+/*
         [MenuItem("Projeny/Change Platform/Windows", false, 7)]
         public static void ChangePlatformWin()
         {
@@ -132,5 +133,6 @@ namespace Projeny
             var lumin = (BuildTarget)Enum.Parse(typeof(BuildTarget), "Lumin");
             PrjHelper.ChangePlatform(lumin);
         }
+*/
     }
 }

@@ -40,6 +40,7 @@ namespace Projeny.Internal
                 Prebuilt = info.Prebuilt.IsEmpty() ? null : info.Prebuilt.ToList(),
                 SolutionFolders = info.SolutionFolders.IsEmpty() ? null : info.SolutionFolders.Select(x => new Dictionary<string, string>() { { x.Key, x.Value } }).ToList(),
                 TargetPlatforms = info.ProjectPlatforms.IsEmpty() ? null : info.ProjectPlatforms,
+                ProjectTargets = info.ProjectTargets.IsEmpty() ? null : info.ProjectTargets,
             };
         }
 
@@ -88,6 +89,11 @@ namespace Projeny.Internal
             if (info.TargetPlatforms != null)
             {
                 newInfo.ProjectPlatforms = info.TargetPlatforms;
+            }
+
+            if (info.ProjectTargets != null)
+            {
+                newInfo.ProjectTargets = info.ProjectTargets;
             }
 
             return newInfo;
@@ -327,6 +333,12 @@ namespace Projeny.Internal
             }
 
             public List<string> TargetPlatforms
+            {
+                get;
+                set;
+            }
+
+            public List<ProjectTarget> ProjectTargets
             {
                 get;
                 set;

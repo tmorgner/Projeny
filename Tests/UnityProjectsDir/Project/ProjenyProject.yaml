@@ -1,0 +1,22 @@
+AssetsFolder:
+- GunShip
+- TextMesh Pro
+- AddressableAssetsData
+ProjectSettingsPath: '[ProjectRoot]/ProjectSettings'
+PluginsFolder:
+- SteamVR
+- UnityTools
+- UnityTestTools
+- UnityCompileFixes
+- Force Field
+- Realistic Explosions Pack
+- Unique Projectiles Volume 1
+- UnityAssetUsageDetector
+- FluentAssertions
+- NaughtyAttributes
+- UnityStandardAssets-Environment
+- ClassicSkybox
+- WeaponSystem
+TargetPlatforms:
+- Windows
+- UWP
