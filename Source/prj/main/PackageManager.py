@@ -223,6 +223,10 @@ UnityPackagesPath: '{1}'
 
             if self._sys.directoryExists(packageFolder):
                 for packageName in self._sys.walkDir(packageFolder):
+
+                    if self.isIgnored(packageName):
+                        continue
+
                     packageDirPath = os.path.join(packageFolder, packageName)
 
                     if not self._sys.IsDir(packageDirPath):
@@ -249,6 +253,10 @@ UnityPackagesPath: '{1}'
 
             if self._sys.directoryExists(packageFolder):
                 for packageName in self._sys.walkDir(packageFolder):
+
+                    if self.isIgnored(packageName):
+                        continue
+
                     packageDirPath = os.path.join(packageFolder, packageName, "Assets", "Plugins", packageName)
 
                     if not self._sys.IsDir(packageDirPath):
@@ -282,6 +290,9 @@ UnityPackagesPath: '{1}'
             self._sys.deleteDirectory(fullPath)
             self.updateLinksForAllProjects()
 
+    def isIgnored(self, name: str):
+        return str(name) == ".git" or str(name) == ".svn"
+
     def getAllPackageNames(self, projectName: str):
         results = []
         self.setPathsForProject(projectName)
@@ -292,6 +303,9 @@ UnityPackagesPath: '{1}'
                 continue
 
             for name in self._sys.walkDir(packageFolder):
+                if self.isIgnored(name):
+                    continue
+
                 if self._sys.IsDir(os.path.join(packageFolder, name)):
                     results.append(name)
 
@@ -300,7 +314,11 @@ UnityPackagesPath: '{1}'
                 continue
 
             for name in self._sys.walkDir(packageFolder):
-                if self._sys.IsDir(os.path.join(packageFolder, name, "Assets", "Plugins", name)):
+                if self.isIgnored(name):
+                    continue
+
+                packagePath = os.path.join(packageFolder, name, "Assets", "Plugins", name)
+                if self._sys.IsDir(packagePath):
                     results.append(name)
 
         return results
