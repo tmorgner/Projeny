@@ -353,7 +353,7 @@ UnityPackagesPath: '{1}'
                     self._log.warn('Failed to initialize project "{0}": {1}'.format(projectName, e))
                     return False
 
-            return True
+        return True
 
     def _createSwitchProjectMenuScript(self, currentProjName: str, currentPlatformTarget: ProjectTarget, outputPath: str):
         projectNames = self.getAllProjectNames()
