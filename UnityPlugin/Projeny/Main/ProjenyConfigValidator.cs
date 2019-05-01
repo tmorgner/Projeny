@@ -63,7 +63,11 @@ namespace Projeny.Internal
                     scriptNameLowered == "streamingassets")
                 {
                     // TODO: Verify subdirectories here
-                    continue;
+                    foreach (var specialDir in scriptDir.GetDirectories())
+                    {
+                        // var specialNameLowered = specialDir.Name.ToLower();
+                        CheckJunction(specialDir, badDirectories, brokenJunctions);
+                    }                    
                 }
 
                 if (scriptNameLowered == "plugins")

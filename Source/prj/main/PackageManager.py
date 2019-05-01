@@ -141,7 +141,7 @@ UnityPackagesPath: '{1}'
 """.format(settingsPath, unityPackagesPath))
 
             self.updateProjectJunctions(projName, target)
-            self.updateLinksForAllProjects()
+            # self.updateLinksForAllProjects()
 
     def getProjectFromAlias(self, alias: str):
         result = self.tryGetProjectFromAlias(alias)
@@ -288,7 +288,7 @@ UnityPackagesPath: '{1}'
 
             self.clearProjectGeneratedFiles(projName)
             self._sys.deleteDirectory(fullPath)
-            self.updateLinksForAllProjects()
+            # self.updateLinksForAllProjects()
 
     def isIgnored(self, name: str):
         return str(name) == ".git" or str(name) == ".svn"
@@ -334,14 +334,14 @@ UnityPackagesPath: '{1}'
         return results
 
     # This will set up all the directory junctions for all projects for all platforms
-    def updateLinksForAllProjects(self):
+    def updateLinksForAllProjects(self) -> bool:
         for projectName in self.getAllProjectNames():
 
             try:
                 projConfig = self._schemaLoader.loadProjectConfig(projectName)
             except Exception as e:
                 self._log.warn('Could not load project config for "{0}"'.format(projectName))
-                continue
+                return False
 
             with self._log.heading('Initializing project "{0}"'.format(projectName)):
                 try:
@@ -351,6 +351,9 @@ UnityPackagesPath: '{1}'
                     self._log.good('Successfully initialized project "{0}"'.format(projectName))
                 except Exception as e:
                     self._log.warn('Failed to initialize project "{0}": {1}'.format(projectName, e))
+                    return False
+
+            return True
 
     def _createSwitchProjectMenuScript(self, currentProjName: str, currentPlatformTarget: ProjectTarget, outputPath: str):
         projectNames = self.getAllProjectNames()
@@ -466,6 +469,7 @@ UnityPackagesPath: '{1}'
         self._varMgr.set('PluginsWebGlLibraryDir', '[PluginsDir]/WebGL')
 
         self._varMgr.set('StreamingAssetsDir', '[ProjectAssetsDir]/StreamingAssets')
+        self._varMgr.set('GizmosDir', '[ProjectAssetsDir]/Gizmos')
 
         self._varMgr.set('IntermediateFilesDir', '[ProjectPlatformRoot]/obj')
 

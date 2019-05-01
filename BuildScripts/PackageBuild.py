@@ -56,6 +56,10 @@ class Runner:
             versionStr = self._sys.readFileAsText('[SourceDir]/Version.txt').strip()
             installerOutputPath = '[DistDir]/ProjenyInstaller-v{0}-x64.exe'.format(versionStr)
 
+            if self._args.development:
+                self._log.info('Development Build, skipping installer and samples creation')
+                return
+
             self._createInstaller(installerOutputPath)
 
             self._createSamplesZip(versionStr)
@@ -99,8 +103,14 @@ class Runner:
         with self._log.heading('Building exes'):
             self._sys.executeAndWait('[BuildScriptDir]/BuildAllExes.bat')
 
+
         with self._log.heading('Building unity plugin dlls'):
-            self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', 'Release')
+            devType = 'Release'
+
+            if self._args.development:
+                devType = 'Debug'
+
+            self._vsSolutionHelper.buildVisualStudioProject('[ProjenyDir]/UnityPlugin/Projeny.sln', devType)
 
             self._copyDir('Content/Shared')
             self._copyDir('Content/Release')
@@ -126,6 +136,7 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--runInstallerAfter', action='store_true', help='')
     parser.add_argument('-t', '--addTag', action='store_true', help='')
     parser.add_argument('-v', '--verbose', action='store_true', help='')
+    parser.add_argument('-d', '--development', action='store_true', help='Create a development build.')
     args = parser.parse_args(sys.argv[1:])
 
     installBindings(args)

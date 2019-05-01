@@ -17,6 +17,7 @@ project_root_marker
 
 **/.vs/
 **/.vscode/
+UnityPlugin/.idea/
 UnityPlugin/packages/*
 UnityPlugin/packages/*
 UnityPlugin/Projeny.Test/obj/

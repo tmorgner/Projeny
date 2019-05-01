@@ -155,7 +155,7 @@ class ProjectSchemaLoader:
 
         return True
 
-    def _getFolderTypeFromString(self, value) -> str:
+    def _getFolderTypeFromString(self, value: str) -> str:
         value = value.lower()
 
         if not value or value == FolderTypes.Normal or len(value) == 0:
@@ -175,6 +175,9 @@ class ProjectSchemaLoader:
 
         if value == FolderTypes.StreamingAssets:
             return FolderTypes.StreamingAssets
+
+        if value == FolderTypes.Gizmos:
+            return FolderTypes.Gizmos
 
         assertThat(False, "Unrecognized folder type '{0}'".format(value))
         return ""

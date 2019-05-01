@@ -51,6 +51,9 @@ class PackageData:
         if self.folderType == FolderTypes.StreamingAssets:
             return '[StreamingAssetsDir]'
 
+        if self.folderType == FolderTypes.Gizmos:
+            return '[GizmosDir]'
+
         if self.isPluginDir:
             return '[PluginsDir]'
 

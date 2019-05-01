@@ -5,3 +5,4 @@ class FolderTypes:
     AndroidLibraries = "androidlibraries"
     Ios = "ios"
     StreamingAssets = "streamingassets"
+    Gizmos = "gizmos"

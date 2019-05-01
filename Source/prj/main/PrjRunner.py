@@ -100,7 +100,8 @@ class PrjRunner:
             self.buildPrebuildProjects()
 
         if self._args.init:
-            self._packageMgr.updateLinksForAllProjects()
+            if not self._packageMgr.updateLinksForAllProjects():
+                raise RuntimeError("Failed to initialize projects.")
 
         if self._args.initLinks:
             self._packageMgr.checkProjectInitialized(self._args.project, self._target)
