@@ -275,6 +275,36 @@ UnityPackagesPath: '{1}'
                     folderInfo.packages.append(packageInfo)
 
             folderInfos.append(folderInfo)
+
+        for packageFolder in projConfig.packageProjectFolders:
+            folderInfo = PackageFolderInfo()
+            folderInfo.path = packageFolder
+            folderInfo.projectDirectory = True
+
+            if self._sys.directoryExists(packageFolder):
+                for packageName in self._sys.walkDir(packageFolder):
+
+                    if self.isIgnored(packageName):
+                        continue
+
+                    packageDirPath = os.path.join(packageFolder, packageName, "Assets", packageName)
+
+                    if not self._sys.IsDir(packageDirPath):
+                        continue
+
+                    installInfoFilePath = os.path.join(packageDirPath, InstallInfoFileName)
+
+                    packageInfo = PackageInfo()
+                    packageInfo.name = packageName
+                    packageInfo.path = packageDirPath
+
+                    if self._sys.fileExists(installInfoFilePath):
+                        installInfo = YamlSerializer.deserialize(self._sys.readFileAsText(installInfoFilePath))
+                        packageInfo.installInfo = installInfo
+
+                    folderInfo.packages.append(packageInfo)
+
+            folderInfos.append(folderInfo)
         return folderInfos
 
     def deleteProject(self, projName: str):
@@ -321,6 +351,10 @@ UnityPackagesPath: '{1}'
                 if self._sys.IsDir(packagePath):
                     results.append(name)
 
+                packagePath = os.path.join(packageFolder, name, "Assets", name)
+                if self._sys.IsDir(packagePath):
+                    results.append(name)
+
         return results
 
     def getAllProjectNames(self):
@@ -341,7 +375,7 @@ UnityPackagesPath: '{1}'
                 projConfig = self._schemaLoader.loadProjectConfig(projectName)
             except Exception as e:
                 self._log.warn('Could not load project config for "{0}"'.format(projectName))
-                return False
+                raise
 
             with self._log.heading('Initializing project "{0}"'.format(projectName)):
                 try:
@@ -351,7 +385,7 @@ UnityPackagesPath: '{1}'
                     self._log.good('Successfully initialized project "{0}"'.format(projectName))
                 except Exception as e:
                     self._log.warn('Failed to initialize project "{0}": {1}'.format(projectName, e))
-                    return False
+                    raise
 
         return True
 

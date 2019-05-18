@@ -10,9 +10,17 @@ namespace Projeny.Internal
     [UsedImplicitly]
     public class ProjenyConfigValidator : AssetPostprocessor
     {
+        static bool callScheduled;
+        
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            VerifyProjenyConfig();
+            if (callScheduled)
+            {
+                return;
+            }
+
+            EditorApplication.delayCall += VerifyProjenyConfig;
+            callScheduled = true;
         }
 
         //[MenuItem("Projeny/Verify Config")]
@@ -20,6 +28,7 @@ namespace Projeny.Internal
         {
             VerifyThatAllDirectoriesAreValidJunctions();
             VerifyPlatformIsCorrect();
+            callScheduled = false;
         }
 
         static void VerifyPlatformIsCorrect()
@@ -67,7 +76,9 @@ namespace Projeny.Internal
                     {
                         // var specialNameLowered = specialDir.Name.ToLower();
                         CheckJunction(specialDir, badDirectories, brokenJunctions);
-                    }                    
+                    }
+
+                    continue;
                 }
 
                 if (scriptNameLowered == "plugins")

@@ -12,7 +12,7 @@ if "%VIRTUAL_ENV%"=="" (
 
 set PYTHONPATH=%~dp0;%~dp0\..\Source;%PYTHONPATH%
 set errorlevel=
-python -m PackageBuild -d %*
+python -m PackageBuild -v -d %*
 
 if "%_ENV_CREATED%"=="1" (
     set _ERRORLEVEL = %errorlevel%

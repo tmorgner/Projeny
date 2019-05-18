@@ -204,7 +204,14 @@ class ProjectSchemaLoader:
                     break
 
             for packageFolder in projectConfig.packageProjectFolders:
-                candidatePackageDir = os.path.join(packageFolder, packageName,"Assets", "Plugins", packageName)
+                candidatePackageDir = os.path.join(packageFolder, packageName, "Assets", "Plugins", packageName)
+
+                if self._sys.directoryExists(candidatePackageDir):
+                    packageDir = self._varMgr.expandPath(candidatePackageDir)
+                    break
+
+            for packageFolder in projectConfig.packageProjectFolders:
+                candidatePackageDir = os.path.join(packageFolder, packageName, "Assets", packageName)
 
                 if self._sys.directoryExists(candidatePackageDir):
                     packageDir = self._varMgr.expandPath(candidatePackageDir)
