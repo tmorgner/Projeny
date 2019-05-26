@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Optional
 
 from prj.main.PackageData import PackageData
 from prj.main.ProjectTarget import ProjectTarget
@@ -9,7 +9,7 @@ class ProjectSchema:
     packages: Dict[str, PackageData]
     customFolderMap: Dict[str, str]
     projectSettingsPath: str
-    unityPackagesPath: Union[str,None]
+    unityPackagesPath: Optional[str]
     projectTargets: ProjectTarget
     targets: List[ProjectTarget]
 

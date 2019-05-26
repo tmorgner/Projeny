@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from mtm.util import UnityHelper, JunctionHelper
 from mtm.util.VarManager import VarManager
@@ -103,7 +104,8 @@ class PackageManager:
 
         return None
 
-    def createProject(self, projName: str, target: ProjectTarget, settingsProject=None):
+    # Todo: This method should take into account what is defined in the default configuration.
+    def createProject(self, projName: str, target: ProjectTarget, settingsProject: Optional[str] = None):
         if target is None:
             target = ProjectTarget(Platforms.Windows, None)
 
@@ -127,18 +129,19 @@ class PackageManager:
             else:
                 settingsPath = '[ProjectRoot]/../{0}/ProjectSettings'.format(settingsProject)
 
-            unityPackagesPath = '[ProjectRoot]/UnityPackages'
-            newUnityPackagesDir = os.path.join(projDirPath, 'UnityPackages')
+            newUnityPackagesDir = os.path.join(projDirPath, 'Packages')
             self._sys.createDirectory(newUnityPackagesDir)
+
+            newUnityPackageManagerDir = os.path.join(projDirPath, 'UnityPackageManager')
+            self._sys.createDirectory(newUnityPackageManagerDir)
 
             with self._sys.openOutputFile(os.path.join(projDirPath, ProjectConfigFileName)) as outFile:
                 outFile.write(
                     """
 ProjectSettingsPath: '{0}'
-UnityPackagesPath: '{1}'
 #AssetsFolder:
     # Uncomment and Add package names here
-""".format(settingsPath, unityPackagesPath))
+""".format(settingsPath))
 
             self.updateProjectJunctions(projName, target)
             # self.updateLinksForAllProjects()
