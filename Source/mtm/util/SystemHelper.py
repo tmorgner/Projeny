@@ -1,25 +1,20 @@
-from distutils.dir_util import copy_tree
+from shutil import copy2, rmtree, copytree
 
-from mtm.log.Logger import Logger
-from mtm.util.VarManager import VarManager
-from mtm.util.ProcessRunner import ProcessRunner
 from mtm.util.ProcessRunner import ResultType
 
 import string
 import fnmatch
 from mtm.util.Assert import *
-import mtm.ioc.Container as Container
 from mtm.ioc.Inject import Inject
-from mtm.ioc.Inject import InjectOptional
 import mtm.util.JunctionUtil as JunctionUtil
 
 import time
 import os
 import shlex
 import subprocess
-import shutil
 import stat
 import platform
+
 from glob import glob
 
 class ProcessErrorCodeException(Exception):
@@ -160,7 +155,7 @@ class SystemHelper:
         fromPath = self._varManager.expand(fromPath)
 
         self.makeMissingDirectoriesInPath(toPath)
-        shutil.copy2(fromPath, toPath)
+        copy2(fromPath, toPath)
         os.chmod(toPath, stat.S_IWRITE)
 
     def IsDir(self, path):
@@ -173,7 +168,7 @@ class SystemHelper:
             if os.path.isfile(filePath):
                 os.unlink(filePath)
             elif os.path.isdir(filePath):
-                shutil.rmtree(filePath)
+                rmtree(filePath)
 
     def deleteDirectoryWaitIfNecessary(self, dirPath):
         dirPath = self._varManager.expand(dirPath)
@@ -186,7 +181,7 @@ class SystemHelper:
 
         while True:
             try:
-                shutil.rmtree(dirPath)
+                rmtree(dirPath)
             except Exception as e:
                 self._log.warn('Could not delete directory at "{0}".  Waiting to try again...'.format(dirPath))
                 time.sleep(5)
@@ -199,7 +194,7 @@ class SystemHelper:
 
     def deleteDirectory(self, dirPath):
         dirPath = self._varManager.expand(dirPath)
-        shutil.rmtree(dirPath)
+        rmtree(dirPath)
 
     def deleteAndReCreateDirectory(self, dirPath):
         self.deleteDirectoryIfExists(dirPath)
@@ -209,7 +204,7 @@ class SystemHelper:
         dirPath = self._varManager.expand(dirPath)
 
         if os.path.exists(dirPath):
-            shutil.rmtree(dirPath)
+            rmtree(dirPath)
             return True
 
         return False
@@ -272,7 +267,8 @@ class SystemHelper:
 
         self._log.debug("Copying directory '{0}' to '{1}'".format(fromPath, toPath))
 
-        copy_tree(fromPath, toPath)
+        copytree(fromPath, toPath)
+
         for root, dirs, files in os.walk(toPath):
             for file in files:
                 os.chmod(os.path.join(root, file), stat.S_IWRITE)
